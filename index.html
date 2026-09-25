@@ -1,3 +1,90 @@
-<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>2D LIVE</title></head><body style="background:#0b0f14;color:white;font-family:Arial;text-align:center;padding:40px"><h1>2D LIVE</h1><h2 id="twod">Loading...</h2><p id="set"></p><p id="value"></p><script>fetch("https://api.thaistock2d.com/live").then(r=>r.json()).then(d=>{document.getElementById("twod").textContent=d.live.twod;document.getElementById("set").textContent="SET "+d.live.set;document.getElementById("value").textContent="VALUE "+d.live.value}).catch(e=>{document.getElementById("twod").textContent="Connection Error"})</script></body></html>
--c
-index.html
+<!doctype html>
+<html lang="my">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<title>2D LIVE</title>
+<style>
+body{margin:0;background:#fff;color:#000;font-family:Arial,"Noto Sans Myanmar",sans-serif}
+.app{max-width:500px;margin:auto;padding:18px 14px}
+.card{border:2px solid #000;border-radius:16px;padding:18px;margin-bottom:18px}
+h1{text-align:center;font-size:24px}
+.hero{text-align:center}
+.twod{font-size:64px;font-weight:900;margin:12px}
+.market{display:flex;justify-content:space-between;margin:10px 0;font-weight:bold}
+.update{border-top:1px solid #000;padding-top:12px;margin-top:15px;display:flex;justify-content:space-between}
+.title{text-align:center;font-size:20px;font-weight:900;margin:20px 0 10px}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result{border:2px solid #000;border-radius:12px;padding:14px;text-align:center}
+.num{font-size:30px;font-weight:900;margin-top:5px}
+.row{display:flex;justify-content:space-between;padding:15px 2px;border-bottom:1px solid #000;font-weight:bold}
+.row:last-child{border-bottom:0}
+.feature{padding:15px 2px;border-bottom:1px solid #000;font-weight:bold}
+.feature:last-child{border-bottom:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<h1>TODAY 2D</h1>
+
+<div class="card hero">
+<div class="twod" id="twod">--</div>
+<div class="market"><span>SET</span><span id="set">--</span></div>
+<div class="market"><span>VALUE</span><span id="value">--</span></div>
+<div class="update"><span>Last Update</span><span id="time">--</span></div>
+</div>
+
+<div class="title">ယနေ့ ရလဒ်</div>
+
+<div class="results">
+<div class="result"><b>12:01</b><div class="num" id="r1201">--</div></div>
+<div class="result"><b>16:30</b><div class="num" id="r1630">--</div></div>
+</div>
+
+<div class="card" style="margin-top:18px">
+
+<div class="row"><span>09:00 Modern</span><span>--</span></div>
+<div class="row"><span>09:00 Internet</span><span>--</span></div>
+<div class="row"><span>02:00 Modern</span><span>--</span></div>
+<div class="row"><span>02:00 Internet</span><span>--</span></div>
+
+</div>
+
+<div class="card">
+
+<div class="row"><span>11:00 ထွက်ဂဏန်း</span><span id="r1100">--</span></div>
+<div class="row"><span>03:00 ထွက်ဂဏန်း</span><span id="r1500">--</span></div>
+
+</div>
+
+<div class="card">
+
+<div class="feature">2D History　›</div>
+<div class="feature">2D Formula　›</div>
+<div class="feature">ကျန်ဂဏန်း　›</div>
+
+</div>
+
+</div>
+
+<script>
+fetch("/api/live?t="+Date.now())
+.then(r=>r.json())
+.then(d=>{
+let l=d.live||{},r=d.result||[];
+document.getElementById("twod").textContent=l.twod||"--";
+document.getElementById("set").textContent=l.set||"--";
+document.getElementById("value").textContent=l.value||"--";
+document.getElementById("time").textContent=l.time||"--";
+function get(t){let x=r.find(a=>a.open_time===t);return x?x.twod:"--"}
+document.getElementById("r1100").textContent=get("11:00:00");
+document.getElementById("r1201").textContent=get("12:01:00");
+document.getElementById("r1500").textContent=get("15:00:00");
+document.getElementById("r1630").textContent=get("16:30:00");
+})
+.catch(()=>document.getElementById("twod").textContent="Connection Error");
+</script>
+
+</body>
+</html>
