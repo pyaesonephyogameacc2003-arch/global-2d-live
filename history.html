@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2D History</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#000;font-family:Arial,sans-serif}
+header{padding:18px;text-align:center;border-bottom:1px solid #000}
+h1{margin:0;font-size:22px}
+main{padding:16px}
+.date{font-size:18px;font-weight:700;margin:8px 0 14px}
+.row{border:1px solid #000;border-radius:10px;padding:14px;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.time{font-size:15px}
+.twod{font-size:28px;font-weight:800}
+.details{margin-top:8px;font-size:13px}
+.back{display:block;text-align:center;margin:20px 0;padding:12px;background:#000;color:#fff;text-decoration:none;border-radius:8px}
+</style>
+</head>
+<body>
+<header><h1>2D History</h1></header>
+<main>
+<div id="history">Loading...</div>
+<a class="back" href="/">Back to Home</a>
+</main>
+<script>
+async function load(){
+ try{
+  const r=await fetch("/api/live?t="+Date.now());
+  const d=await r.json();
+  const list=d.result||[];
+  const box=document.getElementById("history");
+  if(!list.length){box.textContent="No history";return}
+  box.innerHTML="";
+  const date=document.createElement("div");
+  date.className="date";
+  date.textContent=list[0].stock_date;
+  box.appendChild(date);
+  list.slice().reverse().forEach(x=>{
+   const row=document.createElement("div");
+   row.className="row";
+   row.innerHTML="<div class="top"><span class="time">"+x.open_time+"</span><span class="twod">"+x.twod+"</span></div><div class="details">SET "+x.set+" &nbsp; VALUE "+x.value+"</div>";
+   box.appendChild(row);
+  });
+ }catch(e){
+  document.getElementById("history").textContent="Connection Error";
+ }
+}
+load();
+</script>
+</body>
+</html>
