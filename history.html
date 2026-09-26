@@ -34,7 +34,7 @@ async function load(){
   const box=document.getElementById("history");
   const month="2026-09";
   if(!list.length){box.textContent="No history";return}
-  box.innerHTML="";for(let i=30;i>0;i--){let r=document.createElement("div");r.className="row";r.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";box.appendChild(r)}
+  box.innerHTML="";for(let i=30;i>0;i--){let wd=new Date(2026,8,i).getDay();if(wd===0||wd===6)continue;let r=document.createElement("div");r.className="row";r.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";box.appendChild(r)}
   const date=document.createElement("div");date.textContent=list[0].stock_date;date.className="date";
   date.className="date";
   date.textContent=list[0].stock_date;
@@ -42,7 +42,7 @@ async function load(){
   list.slice().reverse().forEach(x=>{
    const row=document.createElement("div");
    row.className="row";
-   row.innerHTML="<div class=\"top\"><span class=\"time\">"+x.open_time+"</span><span class=\"twod\">"+x.twod+"</span></div><div class=\"details\">SET "+x.set+" &nbsp; VALUE "+x.value+"</div>";
+   
    box.appendChild(row);
   });
  }catch(e){
