@@ -35,7 +35,7 @@ async function load(){
   const month="2026-09";
   if(!list.length){box.textContent="No history";return}
   box.innerHTML="";for(let i=30;i>0;i--){let wd=new Date(2026,8,i).getDay();if(wd===0||wd===6)continue;let r=document.createElement("div");r.className="row";r.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";box.appendChild(r)}
-  const date=document.createElement("div");date.textContent=list[0].stock_date;date.className="date";
+  
   date.className="date";
   date.textContent=list[0].stock_date;
   box.appendChild(date);
