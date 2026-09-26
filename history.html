@@ -32,8 +32,9 @@ async function load(){
   const d=await r.json();
   const list=Array.isArray(d.result)?d.result:[];
   const box=document.getElementById("history");
+  const month="2026-09";
   if(!list.length){box.textContent="No history";return}
-  box.innerHTML="";
+  box.innerHTML="";for(let i=30;i>0;i--){let r=document.createElement("div");r.className="row";r.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";box.appendChild(r)}
   const date=document.createElement("div");date.textContent=list[0].stock_date;date.className="date";
   date.className="date";
   date.textContent=list[0].stock_date;
