@@ -69,33 +69,43 @@ select{
 }
 </style>
 
+
+
+
+
 <style>
-body.dark{
+:root.dark{
+ --bg:#111 !important;
+ --text:#fff !important;
+ --card:#1d1d1d !important;
+ --border:#fff !important;
+}
+:root.dark body{
  background:#111 !important;
  color:#fff !important;
 }
-body.dark .card,
-body.dark .table,
-body.dark .row,
-body.dark .feature{
+:root.dark .card,
+:root.dark .table,
+:root.dark .row,
+:root.dark .feature{
  background:#1d1d1d !important;
  color:#fff !important;
  border-color:#fff !important;
 }
-body.dark a{
+:root.dark a{
  color:#fff !important;
 }
 </style>
-
-<script>
-(function(){
- const dark=localStorage.getItem("darkMode")==="on";
- if(dark) document.body.classList.add("dark");
-})();
-</script>
 </head>
 
 <body>
+<script>
+(function(){
+ const dark=localStorage.getItem("darkMode")==="on";
+ if(dark) document.documentElement.classList.add("dark");
+})();
+</script>
+
 <a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
 
 <h1>2D History</h1>
