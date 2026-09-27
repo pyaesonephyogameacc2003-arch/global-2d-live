@@ -83,7 +83,7 @@ document.getElementById("r1201").textContent=get("12:01:00");
 document.getElementById("r1500").textContent=get("15:00:00");
 document.getElementById("r1630").textContent=get("16:30:00");
 })
-.catch(e=>console.log("API ERROR",e));
+.catch(e=>document.getElementById("twod").textContent="ERR: "+e.message);
 </script>
 
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
