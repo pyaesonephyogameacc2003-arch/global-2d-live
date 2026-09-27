@@ -32,7 +32,7 @@ h1{text-align:center;font-size:24px}
 <div class="twod" id="twod">--</div>
 <div class="market"><span>SET</span><span id="set">--</span></div>
 <div class="market"><span>VALUE</span><span id="value">--</span></div>
-<div class="update"><span>Last Update</span><span id="time">--</span></div>
+<div class="update"><span>Updated</span><span id="time">--</span></div>
 </div>
 
 <div class="title">ယနေ့ ရလဒ်</div>
@@ -109,7 +109,7 @@ console.log("LIVE ERROR",e);
 loadLive();
 setInterval(loadLive,2000);
 </script>
-.catch(e=>document.getElementById("twod").textContent="ERR: "+e.message);
+
 </script>
 
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
