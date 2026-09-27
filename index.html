@@ -81,10 +81,10 @@ h1{text-align:center;font-size:24px}
 
 <div class="card" style="margin-top:18px">
 
-<div class="row"><span>09:00 Modern</span><span>--</span></div>
-<div class="row"><span>09:00 Internet</span><span>--</span></div>
-<div class="row"><span>02:00 Modern</span><span>--</span></div>
-<div class="row"><span>02:00 Internet</span><span>--</span></div>
+<div class="row"><div class="row"><span>09:30 Modern</span><span id="modern0930">--</span></div></div>
+<div class="row"><div class="row"><span>09:30 Internet</span><span id="internet0930">--</span></div></div>
+<div class="row"><div class="row"><span>02:00 Modern</span><span id="modern1400">--</span></div></div>
+<div class="row"><div class="row"><span>02:00 Internet</span><span id="internet1400">--</span></div></div>
 
 </div>
 
@@ -111,7 +111,7 @@ try{
 let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
 console.log("STATUS",response.status);
 let d=await response.json();
-let l=d.live||{},r=d.result||[];
+let l=d.live||{},r=d.result||[],b=d.bm2d||[];
 
 document.getElementById("twod").textContent=l.twod||"--";
 document.getElementById("set").textContent=l.set||"--";
@@ -120,7 +120,7 @@ document.getElementById("time").textContent=l.time||"--";
 let updateTime=document.getElementById("updateTime");
 let updateCheck=document.getElementById("updateCheck");
 
-let latest=r.length ? r[r.length-1] : null;
+function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let latest=r.length ? r[r.length-1] : null;
 let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
