@@ -70,7 +70,7 @@ h1{text-align:center;font-size:24px}
 
 <script>
 fetch("/api/live?t="+Date.now(),{cache:"no-store"})
-.then(r=>r.json())
+.then(r=>{console.log("STATUS",r.status);return r.json()})
 .then(d=>{
 let l=d.live||{},r=d.result||[];
 document.getElementById("twod").textContent=l.twod||"--";
