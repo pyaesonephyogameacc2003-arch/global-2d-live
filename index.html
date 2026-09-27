@@ -69,20 +69,36 @@ h1{text-align:center;font-size:24px}
 </div>
 
 <script>
-fetch("/api/live?t="+Date.now(),{cache:"no-store"})
-.then(r=>{console.log("STATUS",r.status);return r.json()})
-.then(d=>{
+async function loadLive(){
+try{
+let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
+console.log("STATUS",response.status);
+let d=await response.json();
 let l=d.live||{},r=d.result||[];
+
 document.getElementById("twod").textContent=l.twod||"--";
 document.getElementById("set").textContent=l.set||"--";
 document.getElementById("value").textContent=l.value||"--";
 document.getElementById("time").textContent=l.time||"--";
-function get(t){let x=r.find(a=>a.open_time===t);return x?x.twod:"--"}
+
+function get(t){
+let x=r.find(a=>a.open_time===t);
+return x?x.twod:"--";
+}
+
 document.getElementById("r1100").textContent=get("11:00:00");
 document.getElementById("r1201").textContent=get("12:01:00");
 document.getElementById("r1500").textContent=get("15:00:00");
 document.getElementById("r1630").textContent=get("16:30:00");
-})
+
+}catch(e){
+console.log("LIVE ERROR",e);
+}
+}
+
+loadLive();
+setInterval(loadLive,2000);
+</script>
 .catch(e=>document.getElementById("twod").textContent="ERR: "+e.message);
 </script>
 
