@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import urllib.request
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -9,7 +9,7 @@ class handler(BaseHTTPRequestHandler):
             req=urllib.request.Request("https://api.thaistock2d.com/live",headers={"User-Agent":"Mozilla/5.0"})
             with urllib.request.urlopen(req,timeout=10) as r:
                 data=r.read()
-            today=datetime.now().strftime("%Y-%m-%d")
+            today=(datetime.now(timezone.utc)+timedelta(hours=6,minutes=30)).strftime("%Y-%m-%d")
             bmreq=urllib.request.Request("https://napi.bm2d.net/number/filter?date="+today,headers={"User-Agent":"Mozilla/5.0"})
             with urllib.request.urlopen(bmreq,timeout=10) as br: bm=json.loads(br.read())
             for x in bm.get("data",[]):
