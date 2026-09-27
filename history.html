@@ -28,24 +28,22 @@ main{padding:16px}
 <script>
 async function load(){
  try{
-  const r=await fetch("/api/live?t="+Date.now());
+  const r=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
+  if(!r.ok) throw new Error("HTTP "+r.status);
   const d=await r.json();
   const list=Array.isArray(d.result)?d.result:[];
   const box=document.getElementById("history");
-  const month="2026-09";
-  if(!list.length){box.textContent="No history";return}
-  box.innerHTML="";for(let i=30;i>0;i--){let wd=new Date(2026,8,i).getDay();if(wd===0||wd===6)continue;let r=document.createElement("div");r.className="row";r.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";box.appendChild(r)}
-  
-  date.className="date";
-  box.appendChild(date);
-  list.slice().reverse().forEach(x=>{
-   const row=document.createElement("div");
+  box.innerHTML="";
+  for(let i=30;i>0;i--){
+   let wd=new Date(2026,8,i).getDay();
+   if(wd===0||wd===6) continue;
+   let row=document.createElement("div");
    row.className="row";
-   
+   row.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";
    box.appendChild(row);
-  });
+  }
  }catch(e){
-  document.getElementById("history").textContent="Connection Error";
+  document.getElementById("history").textContent="Error: "+e.message;
  }
 }
 load();
