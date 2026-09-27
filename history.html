@@ -1,52 +1,199 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="my">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>2D History</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#fff;color:#000;font-family:Arial,sans-serif}
-header{padding:18px;text-align:center;border-bottom:1px solid #000}
-h1{margin:0;font-size:22px}
-main{padding:16px}
-.date{font-size:18px;font-weight:700;margin:8px 0 14px}
-.row{border:1px solid #000;border-radius:10px;padding:14px;margin-bottom:10px}
-.top{display:flex;justify-content:space-between;align-items:center}
-.time{font-size:15px}
-.twod{font-size:28px;font-weight:800}
-.details{margin-top:8px;font-size:13px}
-.back{display:block;text-align:center;margin:20px 0;padding:12px;background:#000;color:#fff;text-decoration:none;border-radius:8px}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#fff;
+ color:#000;
+ padding:16px;
+}
+h1{
+ text-align:center;
+ font-size:25px;
+ margin:8px 0 18px;
+}
+select{
+ display:block;
+ width:100%;
+ max-width:300px;
+ margin:0 auto 18px;
+ padding:12px;
+ font-size:16px;
+ border:2px solid #000;
+ border-radius:8px;
+ background:#fff;
+ color:#000;
+}
+.table{
+ width:100%;
+ max-width:600px;
+ margin:auto;
+ border:2px solid #000;
+}
+.row{
+ display:grid;
+ grid-template-columns:1.25fr repeat(4,1fr);
+ border-bottom:1px solid #000;
+}
+.row:last-child{border-bottom:0}
+.cell{
+ padding:11px 4px;
+ text-align:center;
+ border-right:1px solid #000;
+ font-size:14px;
+}
+.cell:last-child{border-right:0}
+.head{
+ font-weight:bold;
+ background:#000;
+ color:#fff;
+}
+.twod{
+ font-weight:bold;
+ font-size:16px;
+}
+.loading{
+ text-align:center;
+ padding:20px;
+}
+.error{
+ color:#b00000;
+ text-align:center;
+ padding:20px;
+}
 </style>
 </head>
+
 <body>
-<header><h1>2D History</h1></header>
-<main>
-<div id="history">Loading...</div>
-<a class="back" href="/">Back to Home</a>
-</main>
+
+<h1>2D History</h1>
+
+<select id="month">
+<option value="2026-09">September 2026</option>
+</select>
+
+<div class="table">
+<div class="row head">
+<div class="cell">Date</div>
+<div class="cell">11:00</div>
+<div class="cell">12:01</div>
+<div class="cell">15:00</div>
+<div class="cell">16:30</div>
+</div>
+
+<div id="history">
+<div class="loading">Loading...</div>
+</div>
+</div>
+
 <script>
-async function load(){
- try{
-  const r=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  const d=await r.json();
-  const list=Array.isArray(d.result)?d.result:[];
-  const box=document.getElementById("history");
-  box.innerHTML="";
-  for(let i=30;i>0;i--){
-   let wd=new Date(2026,8,i).getDay();
-   if(wd===0||wd===6) continue;
-   let row=document.createElement("div");
-   row.className="row";
-   row.innerHTML="<div class=\"cell date\">Sep "+String(i).padStart(2,"0")+"</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div><div class=\"cell twod\">--</div>";
-   box.appendChild(row);
+const month=document.getElementById("month");
+const history=document.getElementById("history");
+
+function getDays(year,monthIndex){
+ let days=[];
+ let total=new Date(year,monthIndex+1,0).getDate();
+
+ for(let d=1;d<=total;d++){
+  let date=new Date(year,monthIndex,d);
+  let wd=date.getDay();
+
+  if(wd!==0 && wd!==6){
+   days.push(d);
   }
- }catch(e){
-  document.getElementById("history").textContent="Error: "+e.message;
  }
+
+ return days.reverse();
 }
-load();
+
+async function loadHistory(){
+
+ history.innerHTML='<div class="loading">Loading...</div>';
+
+ const [year,monthNum]=month.value.split("-").map(Number);
+ const monthIndex=monthNum-1;
+
+ const days=getDays(year,monthIndex);
+
+ const rows=[];
+
+ for(const day of days){
+
+  const date=
+   year+"-"+
+   String(monthNum).padStart(2,"0")+"-"+
+   String(day).padStart(2,"0");
+
+  let values={
+   "11:00:00":"--",
+   "12:01:00":"--",
+   "15:00:00":"--",
+   "16:30:00":"--"
+  };
+
+  try{
+
+   const response=await fetch(
+    "/api/history?date="+date+"&t="+Date.now(),
+    {cache:"no-store"}
+   );
+
+   if(response.ok){
+
+    const data=await response.json();
+
+    if(Array.isArray(data) && data[0] && Array.isArray(data[0].child)){
+
+     data[0].child.forEach(item=>{
+      if(values.hasOwnProperty(item.time)){
+       values[item.time]=item.twod || "--";
+      }
+     });
+
+    }
+
+   }
+
+  }catch(e){
+   console.log(date,e);
+  }
+
+  rows.push({
+   date:day+" "+new Date(year,monthIndex,day)
+    .toLocaleString("en-US",{month:"short"}),
+   values
+  });
+ }
+
+ history.innerHTML="";
+
+ rows.forEach(item=>{
+
+  const row=document.createElement("div");
+  row.className="row";
+
+  row.innerHTML=
+   '<div class="cell date">'+item.date+'</div>'+
+   '<div class="cell twod">'+item.values["11:00:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["12:01:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["15:00:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["16:30:00"]+'</div>';
+
+  history.appendChild(row);
+
+ });
+}
+
+month.addEventListener("change",loadHistory);
+
+loadHistory();
 </script>
+
 </body>
 </html>
