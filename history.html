@@ -103,13 +103,52 @@ function getDays(year,monthIndex){
  for(let d=1;d<=total;d++){
   let date=new Date(year,monthIndex,d);
   let wd=date.getDay();
-
-  if(wd!==0 && wd!==6){
-   days.push(d);
-  }
+  if(wd!==0 && wd!==6) days.push(d);
  }
 
  return days.reverse();
+}
+
+async function fetchDay(date){
+
+ let values={
+  "11:00:00":"--",
+  "12:01:00":"--",
+  "15:00:00":"--",
+  "16:30:00":"--"
+ };
+
+ try{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),8000);
+
+  const response=await fetch(
+   "/api/history?date="+date,
+   {
+    cache:"no-store",
+    signal:controller.signal
+   }
+  );
+
+  clearTimeout(timer);
+
+  if(!response.ok) throw Error("HTTP "+response.status);
+
+  const data=await response.json();
+
+  if(Array.isArray(data) && data[0] && Array.isArray(data[0].child)){
+   data[0].child.forEach(item=>{
+    if(Object.prototype.hasOwnProperty.call(values,item.time)){
+     values[item.time]=item.twod || "--";
+    }
+   });
+  }
+
+ }catch(e){
+  console.log(date,e);
+ }
+
+ return values;
 }
 
 async function loadHistory(){
@@ -118,58 +157,23 @@ async function loadHistory(){
 
  const [year,monthNum]=month.value.split("-").map(Number);
  const monthIndex=monthNum-1;
-
  const days=getDays(year,monthIndex);
 
- const rows=[];
-
- for(const day of days){
+ const requests=days.map(day=>{
 
   const date=
    year+"-"+
    String(monthNum).padStart(2,"0")+"-"+
    String(day).padStart(2,"0");
 
-  let values={
-   "11:00:00":"--",
-   "12:01:00":"--",
-   "15:00:00":"--",
-   "16:30:00":"--"
-  };
-
-  try{
-
-   const response=await fetch(
-    "/api/history?date="+date+"&t="+Date.now(),
-    {cache:"no-store"}
-   );
-
-   if(response.ok){
-
-    const data=await response.json();
-
-    if(Array.isArray(data) && data[0] && Array.isArray(data[0].child)){
-
-     data[0].child.forEach(item=>{
-      if(values.hasOwnProperty(item.time)){
-       values[item.time]=item.twod || "--";
-      }
-     });
-
-    }
-
-   }
-
-  }catch(e){
-   console.log(date,e);
-  }
-
-  rows.push({
-   date:day+" "+new Date(year,monthIndex,day)
-    .toLocaleString("en-US",{month:"short"}),
+  return fetchDay(date).then(values=>({
+   day,
    values
-  });
- }
+  }));
+
+ });
+
+ const rows=await Promise.all(requests);
 
  history.innerHTML="";
 
@@ -178,20 +182,23 @@ async function loadHistory(){
   const row=document.createElement("div");
   row.className="row";
 
+  const dateLabel=
+   item.day+" "+
+   new Date(year,monthIndex,item.day)
+    .toLocaleString("en-US",{month:"short"});
+
   row.innerHTML=
-   '<div class="cell date">'+item.date+'</div>'+
+   '<div class="cell date">'+dateLabel+'</div>'+
    '<div class="cell twod">'+item.values["11:00:00"]+'</div>'+
    '<div class="cell twod">'+item.values["12:01:00"]+'</div>'+
    '<div class="cell twod">'+item.values["15:00:00"]+'</div>'+
    '<div class="cell twod">'+item.values["16:30:00"]+'</div>';
 
   history.appendChild(row);
-
  });
 }
 
 month.addEventListener("change",loadHistory);
-
 loadHistory();
 </script>
 
