@@ -81,10 +81,10 @@ h1{text-align:center;font-size:24px}
 
 <div class="card" style="margin-top:18px">
 
-<div class="row"><div class="row"><span>09:30 Modern</span><span id="modern0930">--</span></div></div>
-<div class="row"><div class="row"><span>09:30 Internet</span><span id="internet0930">--</span></div></div>
-<div class="row"><div class="row"><span>02:00 Modern</span><span id="modern1400">--</span></div></div>
-<div class="row"><div class="row"><span>02:00 Internet</span><span id="internet1400">--</span></div></div>
+<div class="row"><div class="row"><span>09:30 Modern</span><span id="modern0930">--</span><small id="date0930"></small></div></div>
+<div class="row"><div class="row"><span>09:30 Internet</span><span id="internet0930">--</span><small id="date0930i"></small></div></div>
+<div class="row"><div class="row"><span>02:00 Modern</span><span id="modern1400">--</span><small id="date1400"></small></div></div>
+<div class="row"><div class="row"><span>02:00 Internet</span><span id="internet1400">--</span><small id="date1400i"></small></div></div>
 
 </div>
 
@@ -120,7 +120,7 @@ document.getElementById("time").textContent=l.time||"--";
 let updateTime=document.getElementById("updateTime");
 let updateCheck=document.getElementById("updateCheck");
 
-function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let latest=r.length ? r[r.length-1] : null;
+function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let x0930=b.find(a=>a.time==="09:30 AM"),x1400=b.find(a=>a.time==="02:00 PM"); document.getElementById("date0930").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date0930i").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date1400").textContent=x1400?" ("+x1400.date+")":""; document.getElementById("date1400i").textContent=x1400?" ("+x1400.date+")":""; let latest=r.length ? r[r.length-1] : null;
 let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
