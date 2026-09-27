@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings</title>
+<style>
+:root{
+ --bg:#fff;
+ --text:#000;
+ --card:#fff;
+ --border:#000;
+}
+body.dark{
+ --bg:#111;
+ --text:#fff;
+ --card:#1d1d1d;
+ --border:#fff;
+}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:var(--bg);
+ color:var(--text);
+ transition:.2s;
+}
+.wrap{
+ max-width:500px;
+ margin:auto;
+ padding:20px;
+}
+h1{text-align:center}
+.card{
+ border:2px solid var(--border);
+ background:var(--card);
+ padding:16px;
+ margin-top:20px;
+}
+.row{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ padding:15px 0;
+ border-bottom:1px solid var(--border);
+}
+.row:last-child{border-bottom:0}
+a{
+ color:var(--text);
+ text-decoration:none;
+}
+.toggle{
+ width:52px;
+ height:30px;
+ border:2px solid var(--border);
+ border-radius:20px;
+ background:var(--card);
+ position:relative;
+ cursor:pointer;
+}
+.toggle:after{
+ content:"";
+ position:absolute;
+ width:22px;
+ height:22px;
+ border-radius:50%;
+ background:var(--text);
+ top:2px;
+ left:2px;
+ transition:.2s;
+}
+body.dark .toggle:after{
+ left:24px;
+}
+.back{
+ display:block;
+ margin-top:20px;
+ padding:12px;
+ background:var(--text);
+ color:var(--bg);
+ text-align:center;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>⚙️ Settings</h1>
+
+<div class="card">
+<div class="row">
+<span>🌙 Dark Mode</span>
+<button class="toggle" id="darkToggle" aria-label="Dark Mode"></button>
+</div>
+
+<div class="row"><a href="/about.html">About</a></div>
+<div class="row"><a href="/data-source.html">Data Source</a></div>
+<div class="row"><a href="/privacy.html">Privacy Policy</a></div>
+<div class="row"><a href="/terms.html">Terms of Use</a></div>
+<div class="row"><a href="/copyright.html">Copyright</a></div>
+<div class="row"><a href="/licenses.html">Open Source Licenses</a></div>
+<div class="row"><a href="/contact.html">Contact</a></div>
+</div>
+
+<a class="back" href="/">ပင်မစာမျက်နှာ</a>
+</div>
+
+<script>
+function applyTheme(){
+ const dark=localStorage.getItem("darkMode")==="on";
+ document.body.classList.toggle("dark",dark);
+}
+document.getElementById("darkToggle").onclick=()=>{
+ const dark=localStorage.getItem("darkMode")==="on";
+ localStorage.setItem("darkMode",dark?"off":"on");
+ applyTheme();
+};
+applyTheme();
+</script>
+</body>
+</html>
