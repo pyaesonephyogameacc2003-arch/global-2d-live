@@ -69,7 +69,7 @@ h1{text-align:center;font-size:24px}
 </div>
 
 <script>
-fetch("/api/live?t="+Date.now())
+fetch("/api/live?t="+Date.now(),{cache:"no-store"})
 .then(r=>r.json())
 .then(d=>{
 let l=d.live||{},r=d.result||[];
