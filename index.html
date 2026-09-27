@@ -97,9 +97,9 @@ h1{text-align:center;font-size:24px}
 
 <div class="card">
 
-<a class="feature" href="/history.html">2D History　›</a>
+<a class="feature-card" href="/history.html"><span>📅</span><b>2D History</b><i>›</i></a>
 <div class="feature">2D Formula　›</div>
-<a class="feature" href="/remaining.html">ကျန်ဂဏန်း　›</a>
+<a class="feature-card" href="/remaining.html"><span>🔢</span><b>ကျန်ဂဏန်း</b><i>›</i></a>
 
 </div>
 
@@ -150,4 +150,8 @@ setInterval(loadLive,2000);
 </script>
 
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
-</html>
+</html><style>
+.feature-card{display:flex;align-items:center;gap:14px;margin:12px 0;padding:17px 18px;border:1.5px solid #ddd;border-radius:16px;background:#fff;color:#111;text-decoration:none;box-shadow:0 4px 14px #0001}
+.feature-card span{font-size:25px}.feature-card b{flex:1;font-size:17px}.feature-card i{font-size:25px;font-style:normal}
+html.dark .feature-card{background:#1b1b1b;color:#fff;border-color:#333}
+</style>
