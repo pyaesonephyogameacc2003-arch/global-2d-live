@@ -81,6 +81,14 @@ document.getElementById("set").textContent=l.set||"--";
 document.getElementById("value").textContent=l.value||"--";
 document.getElementById("time").textContent=l.time||"--";
 
+let latest=r.length ? r[r.length-1] : null;
+let updated=latest ? latest.stock_datetime : null;
+
+if(updated){
+ document.getElementById("time").textContent=
+   "Updated: "+updated;
+}
+
 function get(t){
 let x=r.find(a=>a.open_time===t);
 return x?x.twod:"--";
