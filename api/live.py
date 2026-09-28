@@ -10,11 +10,11 @@ class handler(BaseHTTPRequestHandler):
             with urllib.request.urlopen(req,timeout=10) as r:
                 data=r.read()
             today=(datetime.now(timezone.utc)+timedelta(hours=6,minutes=30)).strftime("%Y-%m-%d")
-            bmreq=urllib.request.Request("https://napi.bm2d.net/number/filter?date="+today,headers={"User-Agent":"Mozilla/5.0"})
-            with urllib.request.urlopen(bmreq,timeout=10) as br: bm=json.loads(br.read())
-            for x in bm.get("data",[]):
-                if x.get("time") in ("09:30 AM","02:00 PM"):
-                    a=x.get("set","");v=x.get("value","");si=a.split(".")[0][-1:] if "." in a else a[-1:];vi=v.split(".")[0][-1:] if "." in v else v[-1:];sd=a.split(".")[1][-1:] if "." in a and len(a.split("."))>1 else "";vd=v.split(".")[1][-1:] if "." in v and len(v.split("."))>1 else "";x["modern"]=si+vi;x["internet"]=sd+vd
+            shwereq=urllib.request.Request("https://backend.shwelamin.com/api/lv/twod-result",headers={"User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(shwereq,timeout=10) as br: shwe=json.loads(br.read())
+            bm=[]
+            for x in shwe.get("data",[]):
+                if x.get("date")==today: bm=[{"time":"09:30 AM","date":x.get("date"),"modern":x.get("modern_930","--"),"internet":x.get("internet_930","--")},{"time":"02:00 PM","date":x.get("date"),"modern":x.get("modern_200","--"),"internet":x.get("internet_200","--")}];break
             self.send_response(200)
             self.send_header("Content-Type","application/json")
             self.send_header("Cache-Control","no-store, no-cache, must-revalidate")
@@ -22,7 +22,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Expires","0")
             self.send_header("Access-Control-Allow-Origin","*")
             self.end_headers()
-            obj=json.loads(data);obj["bm2d"]=[x for x in bm.get("data",[]) if x.get("time") in ("09:30 AM","02:00 PM")];self.wfile.write(json.dumps(obj).encode())
+            obj=json.loads(data);obj["bm2d"]=bm;self.wfile.write(json.dumps(obj).encode())
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type","application/json")
