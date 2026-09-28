@@ -125,7 +125,7 @@ let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
  document.getElementById("time").textContent=updated;
- document.getElementById("time").textContent=updated+((latest && (latest.open_time==="12:01:00" || latest.open_time==="16:30:00")) ? " ✓✓" : "");
+ let confirmed=r.find(a=>(a.open_time==="12:01:00" || a.open_time==="16:30:00") && a.twod && a.twod!=="--"); document.getElementById("time").textContent=confirmed ? confirmed.stock_datetime+" ✓✓" : (l.time||"--");
 }
 
 function get(t){
