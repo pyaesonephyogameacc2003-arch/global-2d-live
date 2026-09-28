@@ -124,8 +124,9 @@ function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document
 let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
- document.getElementById("time").textContent=updated;
- let confirmed=r.find(a=>(a.open_time==="12:01:00" || a.open_time==="16:30:00") && a.twod && a.twod!=="--"); document.getElementById("time").textContent=confirmed ? confirmed.stock_datetime+" ✓✓" : (l.time||"--");
+ let confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="12:01" && a.twod && a.twod!=="--");
+ if(!confirmed) confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="16:30" && a.twod && a.twod!=="--");
+ document.getElementById("time").textContent=confirmed ? confirmed.stock_datetime+" ✓✓" : l.time||"--";
 }
 
 function get(t){
