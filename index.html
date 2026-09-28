@@ -129,7 +129,7 @@ if(updated){
 }
 
 function get(t){
-let x=r.find(a=>a.open_time===t);
+let x=r.find(a=>(a.open_time||"").slice(0,5)===t.slice(0,5));
 return x?x.twod:"--";
 }
 
