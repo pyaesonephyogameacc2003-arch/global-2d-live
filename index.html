@@ -124,8 +124,8 @@ function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document
 let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
- updateTime.textContent=updated;
- updateCheck.textContent=(latest && (latest.open_time==="12:01:00" || latest.open_time==="16:30:00")) ? "✓✓" : "";
+ document.getElementById("time").textContent=updated;
+ document.getElementById("time").textContent=updated+((latest && (latest.open_time==="12:01:00" || latest.open_time==="16:30:00")) ? " ✓✓" : "");
 }
 
 function get(t){
