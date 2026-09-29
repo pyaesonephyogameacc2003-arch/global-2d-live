@@ -75,7 +75,7 @@ h1{text-align:center;font-size:24px}
 <div class="title">ယနေ့ ရလဒ်</div>
 
 <div class="results">
-<div class="result"><b>12:00</b><div class="num" id="r1201">--</div></div>
+<div class="result"><b>12:01</b><div class="num" id="r1201">--</div></div>
 <div class="result"><b>16:30</b><div class="num" id="r1630">--</div></div>
 </div>
 
@@ -125,17 +125,17 @@ let updated=latest ? latest.stock_datetime : null;
 
 if(updated){
  let confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="16:30" && a.twod && a.twod!=="--");
- if(!confirmed) confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="12:00" && a.twod && a.twod!=="--");
+ if(!confirmed) confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="12:01" && a.twod && a.twod!=="--");
  document.getElementById("time").textContent=confirmed ? confirmed.stock_datetime+" ✓✓" : l.time||"--";
 }
 
 function get(t){
-let x=r.find(a=>(a.open_time||"").slice(0,5)===t.slice(0,5));
+let x=r.find(a=>{let o=(a.open_time||"").slice(0,5);return o===t.slice(0,5);});
 return x?x.twod:"--";
 }
 
 document.getElementById("r1100").textContent=get("11:00:00");
-document.getElementById("r1201").textContent=get("12:00:00");
+document.getElementById("r1201").textContent=get("12:01:00");
 document.getElementById("r1500").textContent=get("15:00:00");
 document.getElementById("r1630").textContent=get("16:30:00");
 
