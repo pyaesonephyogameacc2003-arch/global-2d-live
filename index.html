@@ -156,7 +156,6 @@ h1{text-align:center;font-size:24px}
 <script>
 let pollTimer=null; let clockTimer=null; let freeze=null; let freezeRequested=false; async function loadLive(){
 try{
-let n=new Date(),m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;if(m<540){freeze=JSON.parse(localStorage.getItem("twodFreeze")||"null");if(freeze){document.getElementById("twod").textContent=freeze.twod;document.getElementById("time").textContent=freeze.time+" ✓✓";document.getElementById("twod").classList.remove("blink");return;}}
 let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
 console.log("STATUS",response.status);
 let d=await response.json();
@@ -185,7 +184,7 @@ for(let a of r){
  let age=(now-stamp)/60000;
 
  if((ot==="12:01" && age>=0 && age<15) ||
-    (ot==="16:30" && age>=0 && age<1440)){
+    (ot==="16:30" && age>=0 && age<15)){
    if(!confirmed || stamp>new Date((confirmed.stock_datetime||"").replace(" ","T"))){
      confirmed=a;
    }
@@ -194,7 +193,6 @@ for(let a of r){
 
 let twodEl=document.getElementById("twod");
 let twodValue=confirmed ? confirmed.twod : (l.twod||"--");
-   if(confirmed && (confirmed.open_time||"").slice(0,5)==="16:30"){ freeze={twod:confirmed.twod,time:confirmed.stock_datetime}; localStorage.setItem("twodFreeze",JSON.stringify(freeze)); }
 
 twodEl.textContent=twodValue;
 
@@ -224,44 +222,10 @@ console.log("LIVE ERROR",e);document.getElementById("time").textContent="JS ERRO
 }
 
 function runSchedule(){
-let n=new Date();
-let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
-let freezeData=localStorage.getItem("twodFreeze"); try{if(freezeData){let z=JSON.parse(freezeData);if(!z||!z.twod||!z.time){localStorage.removeItem("twodFreeze");freezeData=null;}}}catch(e){localStorage.removeItem("twodFreeze");freezeData=null;}
-
-if(m>=540 && m<990){
  if(!pollTimer){
-  localStorage.removeItem("twodFreeze");
-  freeze=null;
   loadLive();
   pollTimer=setInterval(loadLive,2000);
  }
-}else if(m>=990 && !freezeData){
- if(!pollTimer){
-  loadLive();
-  pollTimer=setInterval(()=>{
-   if(localStorage.getItem("twodFreeze")){
-    clearInterval(pollTimer);
-    pollTimer=null;
-   }else{
-    loadLive();
-   }
-  },2000);
- }
-}else{
- if(pollTimer){
-  clearInterval(pollTimer);
-  pollTimer=null;
- }
- if(m<540 || m>=990){
-  let f=localStorage.getItem("twodFreeze");
-  if(f){
-   freeze=JSON.parse(f);
-   document.getElementById("twod").textContent=freeze.twod;
-   document.getElementById("time").textContent=freeze.time+" ✓✓";
-   document.getElementById("twod").classList.remove("blink");
-  }
- }
-}
 }
 runSchedule();
 clockTimer=setInterval(runSchedule,1000);
