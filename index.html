@@ -226,7 +226,7 @@ console.log("LIVE ERROR",e);
 function runSchedule(){
 let n=new Date();
 let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
-let freezeData=localStorage.getItem("twodFreeze");
+let freezeData=localStorage.getItem("twodFreeze"); try{if(freezeData){let z=JSON.parse(freezeData);if(!z||!z.twod||!z.time){localStorage.removeItem("twodFreeze");freezeData=null;}}}catch(e){localStorage.removeItem("twodFreeze");freezeData=null;}
 
 if(m>=540 && m<990){
  if(!pollTimer){
