@@ -219,7 +219,7 @@ document.getElementById("r1500").textContent=get("15:00:00");
 document.getElementById("r1630").textContent=get("16:30:00");
 
 }catch(e){
-console.log("LIVE ERROR",e);
+console.log("LIVE ERROR",e);document.getElementById("time").textContent="JS ERROR: "+(e.message||e);
 }
 }
 
