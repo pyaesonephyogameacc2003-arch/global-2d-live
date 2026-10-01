@@ -176,7 +176,7 @@ h1{text-align:center;font-size:24px}
 <script>
 let pollTimer=null;
 let clockTimer=null;
-let freeze=null;
+let freeze=null; let recoveryStarted=false;
 
 function el(id){return document.getElementById(id);}
 
@@ -466,6 +466,34 @@ async function loadLive(){
   }
 }
 
+async function recoverFreeze(){
+  if(recoveryStarted) return;
+  recoveryStarted=true;
+  try{
+    let response=await fetch('/api/live?t='+Date.now(),{cache:'no-store'});
+    if(!response.ok) throw new Error('API '+response.status);
+    let d=await response.json();
+    let r=d.result||[];
+    let valid=r.filter(a=>a && a.twod && a.twod!=='--' && a.stock_datetime);
+    if(!valid.length) return;
+    let dates=[...new Set(valid.map(a=>a.stock_datetime.slice(0,10)))].sort();
+    let date=dates[dates.length-1];
+    let result12=null,result1630=null,result1100=null,result1500=null;
+    for(let a of valid){
+      if(a.stock_datetime.slice(0,10)!==date) continue;
+      let ot=(a.open_time||'').slice(0,5);
+      if(ot==='11:00') result1100=a;
+      if(ot==='12:01') result12=a;
+      if(ot==='15:00') result1500=a;
+      if(ot==='16:30') result1630=a;
+    }
+    if(!result1630) return;
+    saveFreeze({date:date,set:result1630.set||'--',value:result1630.value||'--',twod:result1630.twod,time:result1630.stock_datetime||'--',r1201:result12?result12.twod:'--',r1630:result1630.twod,r1100:result1100?result1100.twod:'--',r1500:result1500?result1500.twod:'--'});
+    let f=readFreeze();
+    if(f){freeze=f;showFreeze(f);}
+  }catch(e){console.log('FREEZE RECOVERY ERROR',e);}
+}
+
 function runSchedule(){
 
   let n = new Date();
@@ -519,18 +547,10 @@ function runSchedule(){
   let f = readFreeze();
 
   if(f){
-
     freeze = f;
     showFreeze(f);
-
   }else{
-
-    /*
-     * No freeze yet.
-     * Keep existing UI instead of forcing API data.
-     */
-    if(el('set')) el('set').textContent = '--';
-    if(el('value')) el('value').textContent = '--';
+    recoverFreeze();
   }
 }
 
