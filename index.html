@@ -235,7 +235,7 @@ if(m>=540 && m<990){
   loadLive();
   pollTimer=setInterval(loadLive,2000);
  }
-}else if(m>=990 && m<992 && !freezeData){
+}else if(m>=990 && !freezeData){
  if(!pollTimer){
   loadLive();
   pollTimer=setInterval(()=>{
@@ -252,7 +252,7 @@ if(m>=540 && m<990){
   clearInterval(pollTimer);
   pollTimer=null;
  }
- if(m<540){
+ if(m<540 || m>=990){
   let f=localStorage.getItem("twodFreeze");
   if(f){
    freeze=JSON.parse(f);
@@ -263,7 +263,6 @@ if(m>=540 && m<990){
  }
 }
 }
-
 runSchedule();
 clockTimer=setInterval(runSchedule,1000);
 
