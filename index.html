@@ -357,7 +357,7 @@ async function loadLive(){
 
       let f = readFreeze();
 
-      if(f && f.date === today){
+      if(f){
         freeze = f;
         showFreeze(f);
         return;
@@ -442,7 +442,7 @@ async function loadLive(){
 
       let f = readFreeze();
 
-      if(f && f.date === today){
+      if(f){
         freeze = f;
         showFreeze(f);
       }
@@ -459,7 +459,7 @@ async function loadLive(){
      */
     let f = readFreeze();
 
-    if(f && f.date === todayString()){
+    if(f){
       freeze = f;
       showFreeze(f);
     }
@@ -499,7 +499,7 @@ function runSchedule(){
 
     let f = readFreeze();
 
-    if(!f || f.date !== todayString()){
+    if(!f){
       loadLive();
     }else{
       freeze = f;
@@ -518,7 +518,7 @@ function runSchedule(){
 
   let f = readFreeze();
 
-  if(f && f.date === todayString()){
+  if(f){
 
     freeze = f;
     showFreeze(f);
