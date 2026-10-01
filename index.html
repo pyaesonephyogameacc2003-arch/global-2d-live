@@ -81,10 +81,17 @@ h1{text-align:center;font-size:24px}
 
 <div class="card" style="margin-top:18px">
 
-<div class="row"><div class="row"><span>09:30 Modern</span><span id="modern0930">--</span><small id="date0930"></small></div></div>
-<div class="row"><div class="row"><span>09:30 Internet</span><span id="internet0930">--</span><small id="date0930i"></small></div></div>
-<div class="row"><div class="row"><span>02:00 Modern</span><span id="modern1400">--</span><small id="date1400"></small></div></div>
-<div class="row"><div class="row"><span>02:00 Internet</span><span id="internet1400">--</span><small id="date1400i"></small></div></div>
+<div class="bm-time">9:30</div>
+<div class="bm-grid">
+  <div class="bm-item"><span>Modern</span><strong id="modern0930">--</strong><small id="date0930"></small></div>
+  <div class="bm-item"><span>Internet</span><strong id="internet0930">--</strong><small id="date0930i"></small></div>
+</div>
+
+<div class="bm-time">02:00</div>
+<div class="bm-grid">
+  <div class="bm-item"><span>Modern</span><strong id="modern1400">--</strong><small id="date1400"></small></div>
+  <div class="bm-item"><span>Internet</span><strong id="internet1400">--</strong><small id="date1400i"></small></div>
+</div>
 
 </div>
 
@@ -113,21 +120,49 @@ console.log("STATUS",response.status);
 let d=await response.json();
 let l=d.live||{},r=d.result||[],b=d.bm2d||[];
 
-document.getElementById("twod").textContent=l.twod||"--";
+
 document.getElementById("set").textContent=l.set||"--";
 document.getElementById("value").textContent=l.value||"--";
 document.getElementById("time").textContent=l.time||"--";
 let updateTime=document.getElementById("updateTime");
 let updateCheck=document.getElementById("updateCheck");
 
-function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let x0930=b.find(a=>a.time==="09:30 AM"),x1400=b.find(a=>a.time==="02:00 PM"); document.getElementById("date0930").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date0930i").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date1400").textContent=x1400?" ("+x1400.date+")":""; document.getElementById("date1400i").textContent=x1400?" ("+x1400.date+")":""; let latest=r.length ? r[r.length-1] : null;
-let updated=latest ? latest.stock_datetime : null;
+function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let x0930=b.find(a=>a.time==="09:30 AM"),x1400=b.find(a=>a.time==="02:00 PM"); document.getElementById("date0930").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date0930i").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date1400").textContent=x1400?" ("+x1400.date+")":""; document.getElementById("date1400i").textContent=x1400?" ("+x1400.date+")":""; let now=new Date();
+let today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+let confirmed=null;
 
-if(updated){
- let confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="16:30" && a.twod && a.twod!=="--");
- if(!confirmed) confirmed=r.find(a=>(a.open_time||"").slice(0,5)==="12:01" && a.twod && a.twod!=="--");
- document.getElementById("time").textContent=confirmed ? confirmed.stock_datetime+" ✓✓" : l.time||"--";
+for(let a of r){
+ let ot=(a.open_time||"").slice(0,5);
+ let dt=a.stock_datetime||"";
+
+ if(!["12:01","16:30"].includes(ot)) continue;
+ if(!a.twod || a.twod==="--" || !dt) continue;
+ if(dt.slice(0,10)!==today) continue;
+
+ let stamp=new Date(dt.replace(" ","T"));
+ let age=(now-stamp)/60000;
+
+ if(age>=0 && age<15){
+   if(!confirmed || stamp>new Date((confirmed.stock_datetime||"").replace(" ","T"))){
+     confirmed=a;
+   }
+ }
 }
+
+let twodEl=document.getElementById("twod");
+let twodValue=confirmed ? confirmed.twod : (l.twod||"--");
+
+twodEl.textContent=twodValue;
+
+/* Blink LIVE only, stop when confirmed result is shown */
+if(!confirmed && twodValue && twodValue!=="--"){
+ twodEl.classList.add("blink");
+}else{
+ twodEl.classList.remove("blink");
+}
+
+document.getElementById("time").textContent =
+ confirmed ? confirmed.stock_datetime+" ✓✓" : (l.time||"--");
 
 function get(t){
 let x=r.find(a=>{let o=(a.open_time||"").slice(0,5);return o===t.slice(0,5);});
@@ -155,4 +190,44 @@ setInterval(loadLive,2000);
 .feature-card{display:flex;align-items:center;gap:14px;margin:12px 0;padding:17px 18px;border:1.5px solid #ddd;border-radius:16px;background:#fff;color:#111;text-decoration:none;box-shadow:0 4px 14px #0001}
 .feature-card span{font-size:25px}.feature-card b{flex:1;font-size:17px}.feature-card i{font-size:25px;font-style:normal}
 html.dark .feature-card{background:#1b1b1b;color:#fff;border-color:#333}
+
+/* 2D Live blinking */
+#twod.blink {
+  animation: twodBlink 0.8s steps(1, start) infinite;
+}
+
+@keyframes twodBlink {
+  50% { opacity: 0; }
+}
+
+
+.bm-time{
+  width:100%;
+  text-align:center;
+  font-weight:700;
+  margin:10px 0 4px;
+}
+
+.bm-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.bm-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.bm-item strong{
+  font-size:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
 </style>
