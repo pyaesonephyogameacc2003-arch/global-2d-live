@@ -222,10 +222,68 @@ console.log("LIVE ERROR",e);document.getElementById("time").textContent="JS ERRO
 }
 
 function runSchedule(){
+let n=new Date();
+let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
+let freezeData=localStorage.getItem("twodFreeze");
+
+try{
+ if(freezeData){
+  let z=JSON.parse(freezeData);
+  if(!z||!z.twod||!z.time){
+   localStorage.removeItem("twodFreeze");
+   freezeData=null;
+  }
+ }
+}catch(e){
+ localStorage.removeItem("twodFreeze");
+ freezeData=null;
+}
+
+if(m>=540 && m<990){
+ if(pollTimer) return;
+ localStorage.removeItem("twodFreeze");
+ freeze=null;
+ loadLive();
+ pollTimer=setInterval(loadLive,2000);
+ return;
+}
+
+if(m>=990){
  if(!pollTimer){
   loadLive();
-  pollTimer=setInterval(loadLive,2000);
+  pollTimer=setInterval(()=>{
+   if(localStorage.getItem("twodFreeze")){
+    clearInterval(pollTimer);
+    pollTimer=null;
+   }else{
+    loadLive();
+   }
+  },2000);
  }
+ return;
+}
+
+if(pollTimer){
+ clearInterval(pollTimer);
+ pollTimer=null;
+}
+
+let f=localStorage.getItem("twodFreeze");
+if(f){
+ try{
+  freeze=JSON.parse(f);
+  if(freeze&&freeze.twod&&freeze.time){
+   document.getElementById("twod").textContent=freeze.twod;
+   document.getElementById("time").textContent=freeze.time+" ✓✓";
+   document.getElementById("twod").classList.remove("blink");
+  }
+ }catch(e){
+  localStorage.removeItem("twodFreeze");
+  freeze=null;
+ }
+}else{
+ loadLive();
+}
 }
 runSchedule();
 clockTimer=setInterval(runSchedule,1000);
