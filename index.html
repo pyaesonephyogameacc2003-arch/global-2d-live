@@ -468,11 +468,11 @@ async function loadLive(){
 
 async function recoverFreeze(){
   if(recoveryStarted) return;
-  recoveryStarted=true;
+  recoveryStarted=true; if(el('time'))el('time').textContent='RECOVERY START';
   try{
     let response=await fetch('/api/live?t='+Date.now(),{cache:'no-store'});
     if(!response.ok) throw new Error('API '+response.status);
-    let d=await response.json();
+    let d=await response.json(); if(el('time'))el('time').textContent='API OK';
     let r=d.result||[];
     let valid=r.filter(a=>a && a.twod && a.twod!=='--' && a.stock_datetime);
     if(!valid.length) return;
@@ -487,10 +487,10 @@ async function recoverFreeze(){
       if(ot==='15:00') result1500=a;
       if(ot==='16:30') result1630=a;
     }
-    if(!result1630) return;
+    if(!result1630){if(el('time'))el('time').textContent='NO 1630';return;}
     saveFreeze({date:date,set:result1630.set||'--',value:result1630.value||'--',twod:result1630.twod,time:result1630.stock_datetime||'--',r1201:result12?result12.twod:'--',r1630:result1630.twod,r1100:result1100?result1100.twod:'--',r1500:result1500?result1500.twod:'--'});
     let f=readFreeze();
-    if(f){freeze=f;showFreeze(f);}
+    if(f){freeze=f;showFreeze(f);if(el('time'))el('time').textContent='RECOVERY OK';}
   }catch(e){console.log('FREEZE RECOVERY ERROR',e);}
 }
 
