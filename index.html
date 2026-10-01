@@ -21,6 +21,27 @@ h1{text-align:center;font-size:24px}
 .row:last-child{border-bottom:0}
 .feature{padding:15px 2px;border-bottom:1px solid #000;font-weight:bold}
 .feature:last-child{border-bottom:0}
+.feature-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:15px 2px;
+  border-bottom:1px solid #000;
+  color:#000;
+  text-decoration:none;
+  font-weight:bold;
+}
+.feature-card b{
+  flex:1;
+}
+.feature-card i{
+  font-style:normal;
+  font-size:22px;
+}
+.feature-card:last-child{
+  border-bottom:0;
+}
+
 </style>
 <link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#ffffff">
 
@@ -101,7 +122,6 @@ h1{text-align:center;font-size:24px}
 </script>
 
 <a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
-<a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
 <div class="app">
 
 <h1>TODAY 2D</h1>
@@ -154,146 +174,380 @@ h1{text-align:center;font-size:24px}
 </div>
 
 <script>
-let pollTimer=null; let clockTimer=null; let freeze=null; let freezeRequested=false; async function loadLive(){
-try{
-let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
-console.log("STATUS",response.status);
-let d=await response.json();
-let l=d.live||{},r=d.result||[],b=d.bm2d||[];
+let pollTimer=null;
+let clockTimer=null;
+let freeze=null;
 
+function el(id){return document.getElementById(id);}
 
-document.getElementById("set").textContent=l.set||"--";
-document.getElementById("value").textContent=l.value||"--";
-document.getElementById("time").textContent=l.time||"--";
-let updateTime=document.getElementById("updateTime");
-let updateCheck=document.getElementById("updateCheck");
+function saveFreeze(data){
+  if(!data || !data.date) return;
 
-function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let x0930=b.find(a=>a.time==="09:30 AM"),x1400=b.find(a=>a.time==="02:00 PM"); document.getElementById("date0930").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date0930i").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date1400").textContent=x1400?" ("+x1400.date+")":""; document.getElementById("date1400i").textContent=x1400?" ("+x1400.date+")":""; let now=new Date();
-let today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-let confirmed=null;
+  const freezeData = {
+    date: String(data.date),
+    set: String(data.set ?? '--'),
+    value: String(data.value ?? '--'),
+    twod: String(data.twod ?? '--'),
+    time: String(data.time ?? '--'),
+    r1201: String(data.r1201 ?? '--'),
+    r1630: String(data.r1630 ?? '--'),
+    r1100: String(data.r1100 ?? '--'),
+    r1500: String(data.r1500 ?? '--')
+  };
 
-for(let a of r){
- let ot=(a.open_time||"").slice(0,5);
- let dt=a.stock_datetime||"";
-
- if(!["12:01","16:30"].includes(ot)) continue;
- if(!a.twod || a.twod==="--" || !dt) continue;
- if(dt.slice(0,10)!==today) continue;
-
- let stamp=new Date(dt.replace(" ","T"));
- let age=(now-stamp)/60000;
-
- if((ot==="12:01" && age>=0 && age<15) ||
-    (ot==="16:30" && age>=0 && age<15)){
-   if(!confirmed || stamp>new Date((confirmed.stock_datetime||"").replace(" ","T"))){
-     confirmed=a;
-   }
- }
+  freeze = freezeData;
+  localStorage.setItem('twodFreeze', JSON.stringify(freezeData));
 }
 
-let twodEl=document.getElementById("twod");
-let twodValue=confirmed ? confirmed.twod : (l.twod||"--");
+function readFreeze(){
+  try{
+    let x = JSON.parse(localStorage.getItem('twodFreeze') || 'null');
 
-twodEl.textContent=twodValue;
+    if(
+      x &&
+      x.date &&
+      x.set !== undefined &&
+      x.value !== undefined &&
+      x.twod !== undefined
+    ){
+      return x;
+    }
+  }catch(e){}
 
-/* Blink LIVE only, stop when confirmed result is shown */
-if(!confirmed && twodValue && twodValue!=="--"){
- twodEl.classList.add("blink");
-}else{
- twodEl.classList.remove("blink");
+  return null;
 }
 
-document.getElementById("time").textContent =
- confirmed ? confirmed.stock_datetime+" ✓✓" : (l.time||"--");
+function showFreeze(x){
+  if(!x) return false;
 
-function get(t){
-let x=r.find(a=>{let o=(a.open_time||"").slice(0,5);return o===t.slice(0,5);});
-return x?x.twod:"--";
+  if(el('set')) el('set').textContent = x.set || '--';
+  if(el('value')) el('value').textContent = x.value || '--';
+
+  if(el('twod')) el('twod').textContent = x.twod || '--';
+  if(el('time')) el('time').textContent = x.time || '--';
+
+  if(el('r1201')) el('r1201').textContent = x.r1201 || '--';
+  if(el('r1630')) el('r1630').textContent = x.r1630 || '--';
+  if(el('r1100')) el('r1100').textContent = x.r1100 || '--';
+  if(el('r1500')) el('r1500').textContent = x.r1500 || '--';
+
+  if(el('twod')) el('twod').classList.remove('blink');
+
+  return true;
 }
 
-document.getElementById("r1100").textContent=get("11:00:00");
-document.getElementById("r1201").textContent=get("12:01:00");
-document.getElementById("r1500").textContent=get("15:00:00");
-document.getElementById("r1630").textContent=get("16:30:00");
-
-}catch(e){
-console.log("LIVE ERROR",e);document.getElementById("time").textContent="JS ERROR: "+(e.message||e);
+function todayString(){
+  let n = new Date();
+  return n.getFullYear() + '-' +
+    String(n.getMonth()+1).padStart(2,'0') + '-' +
+    String(n.getDate()).padStart(2,'0');
 }
+
+async function loadLive(){
+  try{
+    let response = await fetch('/api/live?t='+Date.now(), {
+      cache:'no-store'
+    });
+
+    if(!response.ok) throw new Error('API '+response.status);
+
+    let d = await response.json();
+
+    let l = d.live || {};
+    let r = d.result || [];
+    let b = d.bm2d || [];
+
+    let now = new Date();
+    let today = todayString();
+    let minutes =
+      now.getHours()*60 +
+      now.getMinutes() +
+      now.getSeconds()/60;
+
+    /*
+     * SET / VALUE
+     * Normal live period: always update.
+     */
+    if(el('set')) el('set').textContent = l.set || '--';
+    if(el('value')) el('value').textContent = l.value || '--';
+
+    function bm(t,k){
+      let x = b.find(a => a.time === t);
+      return x ? (x[k] || '--') : '--';
+    }
+
+    if(el('modern0930'))
+      el('modern0930').textContent = bm('09:30 AM','modern');
+
+    if(el('internet0930'))
+      el('internet0930').textContent = bm('09:30 AM','internet');
+
+    if(el('modern1400'))
+      el('modern1400').textContent = bm('02:00 PM','modern');
+
+    if(el('internet1400'))
+      el('internet1400').textContent = bm('02:00 PM','internet');
+
+    let x0930 = b.find(a => a.time === '09:30 AM');
+    let x1400 = b.find(a => a.time === '02:00 PM');
+
+    if(el('date0930'))
+      el('date0930').textContent = x0930 ? ' ('+x0930.date+')' : '';
+
+    if(el('date0930i'))
+      el('date0930i').textContent = x0930 ? ' ('+x0930.date+')' : '';
+
+    if(el('date1400'))
+      el('date1400').textContent = x1400 ? ' ('+x1400.date+')' : '';
+
+    if(el('date1400i'))
+      el('date1400i').textContent = x1400 ? ' ('+x1400.date+')' : '';
+
+    /*
+     * Today's results only.
+     */
+    let result12 = null;
+    let result1630 = null;
+    let result1100 = null;
+    let result1500 = null;
+
+    for(let a of r){
+      let ot = (a.open_time || '').slice(0,5);
+      let dt = a.stock_datetime || '';
+
+      if(
+        !a.twod ||
+        a.twod === '--' ||
+        !dt ||
+        dt.slice(0,10) !== today
+      ) continue;
+
+      if(ot === '11:00') result1100 = a;
+      if(ot === '12:01') result12 = a;
+      if(ot === '15:00') result1500 = a;
+      if(ot === '16:30') result1630 = a;
+    }
+
+    /*
+     * 16:30 reached:
+     * save ONE complete snapshot.
+     */
+    if(minutes >= 990 && result1630){
+
+      saveFreeze({
+        date: today,
+        set: l.set || '--',
+        value: l.value || '--',
+        twod: result1630.twod,
+        time: result1630.stock_datetime || '--',
+        r1201: result12 ? result12.twod : '--',
+        r1630: result1630.twod,
+        r1100: result1100 ? result1100.twod : '--',
+        r1500: result1500 ? result1500.twod : '--'
+      });
+
+      freeze = readFreeze();
+    }
+
+    /*
+     * 00:00 - 08:59:
+     * NEVER overwrite the frozen UI with API '--'.
+     */
+    if(minutes < 540){
+
+      let f = readFreeze();
+
+      if(f && f.date === today){
+        freeze = f;
+        showFreeze(f);
+        return;
+      }
+
+      /*
+       * Old freeze from another day must not be used.
+       */
+      localStorage.removeItem('twodFreeze');
+      freeze = null;
+    }
+
+    /*
+     * 09:00 - 16:29:
+     * normal live display.
+     */
+    if(minutes >= 540 && minutes < 990){
+
+      if(el('set')) el('set').textContent = l.set || '--';
+      if(el('value')) el('value').textContent = l.value || '--';
+
+      if(el('r1100'))
+        el('r1100').textContent = result1100 ? result1100.twod : '--';
+
+      if(el('r1201'))
+        el('r1201').textContent = result12 ? result12.twod : '--';
+
+      if(el('r1500'))
+        el('r1500').textContent = result1500 ? result1500.twod : '--';
+
+      if(el('r1630'))
+        el('r1630').textContent = result1630 ? result1630.twod : '--';
+    }
+
+    /*
+     * Main 2D display.
+     */
+    let confirmed = null;
+
+    if(result1630 && minutes >= 990){
+      confirmed = result1630;
+    }else if(result12){
+      let stamp = new Date(
+        result12.stock_datetime.replace(' ','T')
+      );
+
+      let age = (now - stamp) / 60000;
+
+      if(age >= 0 && age < 15)
+        confirmed = result12;
+    }
+
+    let twodValue =
+      confirmed ? confirmed.twod : (l.twod || '--');
+
+    if(el('twod'))
+      el('twod').textContent = twodValue;
+
+    if(confirmed){
+
+      if(el('time'))
+        el('time').textContent =
+          confirmed.stock_datetime + ' ✓✓';
+
+      if(el('twod'))
+        el('twod').classList.remove('blink');
+
+    }else{
+
+      if(el('time'))
+        el('time').textContent = l.time || '--';
+
+      if(l.twod && l.twod !== '--' && el('twod'))
+        el('twod').classList.add('blink');
+    }
+
+    /*
+     * 16:30 snapshot must remain visible even if API
+     * subsequently returns incomplete data.
+     */
+    if(minutes >= 990){
+
+      let f = readFreeze();
+
+      if(f && f.date === today){
+        freeze = f;
+        showFreeze(f);
+      }
+    }
+
+  }catch(e){
+
+    console.log('LIVE ERROR',e);
+
+    /*
+     * API error:
+     * use today's frozen snapshot instead of replacing
+     * everything with '--'.
+     */
+    let f = readFreeze();
+
+    if(f && f.date === todayString()){
+      freeze = f;
+      showFreeze(f);
+    }
+  }
 }
 
 function runSchedule(){
-let n=new Date();
-let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
-let freezeData=localStorage.getItem("twodFreeze");
 
-try{
- if(freezeData){
-  let z=JSON.parse(freezeData);
-  if(!z||!z.twod||!z.time){
-   localStorage.removeItem("twodFreeze");
-   freezeData=null;
+  let n = new Date();
+
+  let m =
+    n.getHours()*60 +
+    n.getMinutes() +
+    n.getSeconds()/60;
+
+  /*
+   * 09:00 - 16:29
+   * Live API polling.
+   */
+  if(m >= 540 && m < 990){
+
+    localStorage.removeItem('twodFreeze');
+    freeze = null;
+
+    startPolling();
+    return;
   }
- }
-}catch(e){
- localStorage.removeItem("twodFreeze");
- freezeData=null;
-}
 
-if(m>=540 && m<990){
- if(pollTimer) return;
- localStorage.removeItem("twodFreeze");
- freeze=null;
- loadLive();
- pollTimer=setInterval(loadLive,2000);
- return;
-}
+  /*
+   * 16:30+
+   * Fetch once to capture the final 16:30 result,
+   * then STOP polling.
+   */
+  if(m >= 990){
 
-if(m>=990){
- if(!pollTimer){
-  loadLive();
-  pollTimer=setInterval(()=>{
-   if(localStorage.getItem("twodFreeze")){
-    clearInterval(pollTimer);
-    pollTimer=null;
-   }else{
-    loadLive();
-   }
-  },2000);
- }
- return;
-}
+    stopPolling();
 
-if(pollTimer){
- clearInterval(pollTimer);
- pollTimer=null;
-}
+    let f = readFreeze();
 
-let f=localStorage.getItem("twodFreeze");
-if(f){
- try{
-  freeze=JSON.parse(f);
-  if(freeze&&freeze.twod&&freeze.time){
-   document.getElementById("twod").textContent=freeze.twod;
-   document.getElementById("time").textContent=freeze.time+" ✓✓";
-   document.getElementById("twod").classList.remove("blink");
+    if(!f || f.date !== todayString()){
+      loadLive();
+    }else{
+      freeze = f;
+      showFreeze(f);
+    }
+
+    return;
   }
- }catch(e){
-  localStorage.removeItem("twodFreeze");
-  freeze=null;
- }
-}else{
- loadLive();
+
+  /*
+   * 00:00 - 08:59
+   * No API polling.
+   * Show today's frozen snapshot.
+   */
+  stopPolling();
+
+  let f = readFreeze();
+
+  if(f && f.date === todayString()){
+
+    freeze = f;
+    showFreeze(f);
+
+  }else{
+
+    /*
+     * No freeze yet.
+     * Keep existing UI instead of forcing API data.
+     */
+    if(el('set')) el('set').textContent = '--';
+    if(el('value')) el('value').textContent = '--';
+  }
 }
-}
+
 runSchedule();
+
 clockTimer=setInterval(runSchedule,1000);
 
-document.addEventListener("visibilitychange",()=>{
- if(document.visibilityState==="visible")runSchedule();
+document.addEventListener('visibilitychange',()=>{
+
+  if(document.visibilityState==='visible')runSchedule();
+
 });
 
-window.addEventListener("focus",runSchedule);
-window.addEventListener("pageshow",runSchedule);
+window.addEventListener('focus',runSchedule);
+
+window.addEventListener('pageshow',runSchedule);
+
 </script>
 
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
