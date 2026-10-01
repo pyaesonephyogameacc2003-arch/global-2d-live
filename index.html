@@ -50,6 +50,47 @@ h1{text-align:center;font-size:24px}
  color:#fff !important;
 }
 </style>
+<style>
+
+/* 2D Live blinking */
+#twod.blink {
+  animation: twodBlink 0.8s steps(1, start) infinite;
+}
+
+@keyframes twodBlink {
+  50% { opacity: 0; }
+}
+
+.bm-time{
+  width:100%;
+  text-align:center;
+  font-weight:700;
+  margin:10px 0 4px;
+}
+
+.bm-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.bm-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.bm-item strong{
+  font-size:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
+</style>
 </head>
 <body>
 <script>
@@ -234,89 +275,5 @@ window.addEventListener("focus",runSchedule);
 window.addEventListener("pageshow",runSchedule);
 </script>
 
-</script>
-
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
-</html><style>
-.feature-card{display:flex;align-items:center;gap:14px;margin:12px 0;padding:17px 18px;border:1.5px solid #ddd;border-radius:16px;background:#fff;color:#111;text-decoration:none;box-shadow:0 4px 14px #0001}
-.feature-card span{font-size:25px}.feature-card b{flex:1;font-size:17px}.feature-card i{font-size:25px;font-style:normal}
-html.dark .feature-card{background:#1b1b1b;color:#fff;border-color:#333}
-
-/* 2D Live blinking */
-#twod.blink {
-  animation: twodBlink 0.8s steps(1, start) infinite;
-}
-
-@keyframes twodBlink {
-  50% { opacity: 0; }
-}
-
-
-.bm-time{
-  width:100%;
-  text-align:center;
-  font-weight:700;
-  margin:10px 0 4px;
-}
-
-.bm-grid{
-  width:100%;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  text-align:center;
-  margin-bottom:8px;
-}
-
-.bm-item{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-.bm-item strong{
-  font-size:1.1em;
-}
-
-.bm-item small{
-  font-size:.75em;
-}
-</style>
-e:1.1em;
-}
-
-.bm-item small{
-  font-size:.75em;
-}
-</style>
- font-size:.75em;
-}
-</style>
-in-bottom:8px;
-}
-
-.bm-item{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-.bm-item strong{
-  font-size:1.1em;
-}
-
-.bm-item small{
-  font-size:.75em;
-}
-</style>
-e:1.1em;
-}
-
-.bm-item small{
-  font-size:.75em;
-}
-</style>
- font-size:.75em;
-}
-</style>
+</html>
