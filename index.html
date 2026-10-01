@@ -113,8 +113,9 @@ h1{text-align:center;font-size:24px}
 </div>
 
 <script>
-async function loadLive(){
+let pollTimer=null; let clockTimer=null; let freeze=null; let freezeRequested=false; async function loadLive(){
 try{
+let n=new Date(),m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;if(m<540){freeze=JSON.parse(localStorage.getItem("twodFreeze")||"null");if(freeze){document.getElementById("twod").textContent=freeze.twod;document.getElementById("time").textContent=freeze.time+" ✓✓";document.getElementById("twod").classList.remove("blink");return;}}
 let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
 console.log("STATUS",response.status);
 let d=await response.json();
@@ -142,7 +143,8 @@ for(let a of r){
  let stamp=new Date(dt.replace(" ","T"));
  let age=(now-stamp)/60000;
 
- if(age>=0 && age<15){
+ if((ot==="12:01" && age>=0 && age<15) ||
+    (ot==="16:30" && age>=0 && age<1440)){
    if(!confirmed || stamp>new Date((confirmed.stock_datetime||"").replace(" ","T"))){
      confirmed=a;
    }
@@ -151,6 +153,7 @@ for(let a of r){
 
 let twodEl=document.getElementById("twod");
 let twodValue=confirmed ? confirmed.twod : (l.twod||"--");
+   if(confirmed && (confirmed.open_time||"").slice(0,5)==="16:30"){ freeze={twod:confirmed.twod,time:confirmed.stock_datetime}; localStorage.setItem("twodFreeze",JSON.stringify(freeze)); }
 
 twodEl.textContent=twodValue;
 
@@ -179,8 +182,56 @@ console.log("LIVE ERROR",e);
 }
 }
 
-loadLive();
-setInterval(loadLive,2000);
+function runSchedule(){
+let n=new Date();
+let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
+let freezeData=localStorage.getItem("twodFreeze");
+
+if(m>=540 && m<990){
+ if(!pollTimer){
+  localStorage.removeItem("twodFreeze");
+  freeze=null;
+  loadLive();
+  pollTimer=setInterval(loadLive,2000);
+ }
+}else if(m>=990 && m<992 && !freezeData){
+ if(!pollTimer){
+  loadLive();
+  pollTimer=setInterval(()=>{
+   if(localStorage.getItem("twodFreeze")){
+    clearInterval(pollTimer);
+    pollTimer=null;
+   }else{
+    loadLive();
+   }
+  },2000);
+ }
+}else{
+ if(pollTimer){
+  clearInterval(pollTimer);
+  pollTimer=null;
+ }
+ if(m<540){
+  let f=localStorage.getItem("twodFreeze");
+  if(f){
+   freeze=JSON.parse(f);
+   document.getElementById("twod").textContent=freeze.twod;
+   document.getElementById("time").textContent=freeze.time+" ✓✓";
+   document.getElementById("twod").classList.remove("blink");
+  }
+ }
+}
+}
+
+runSchedule();
+clockTimer=setInterval(runSchedule,1000);
+
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="visible")runSchedule();
+});
+
+window.addEventListener("focus",runSchedule);
+window.addEventListener("pageshow",runSchedule);
 </script>
 
 </script>
@@ -193,7 +244,7 @@ html.dark .feature-card{background:#1b1b1b;color:#fff;border-color:#333}
 
 /* 2D Live blinking */
 #twod.blink {
-  animation: twodBlink 1s steps(1, start) infinite;
+  animation: twodBlink 0.8s steps(1, start) infinite;
 }
 
 @keyframes twodBlink {
@@ -229,5 +280,43 @@ html.dark .feature-card{background:#1b1b1b;color:#fff;border-color:#333}
 
 .bm-item small{
   font-size:.75em;
+}
+</style>
+e:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
+</style>
+ font-size:.75em;
+}
+</style>
+in-bottom:8px;
+}
+
+.bm-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.bm-item strong{
+  font-size:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
+</style>
+e:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
+</style>
+ font-size:.75em;
 }
 </style>
