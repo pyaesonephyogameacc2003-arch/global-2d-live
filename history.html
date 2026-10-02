@@ -184,18 +184,6 @@ async function fetchDay(date){
   console.log(date,e);
  }
 
- const fallback1630={
-  "2026-09-03":"23",
-  "2026-09-09":"90",
-  "2026-09-14":"79",
-  "2026-09-21":"34",
-  "2026-09-24":"87"
- };
-
- if(values["16:30:00"]==="--" && fallback1630[date]){
-  values["16:30:00"]=fallback1630[date];
- }
-
  return values;
 }
 
