@@ -6,63 +6,132 @@
   <title>0-9 ကျန်ဂဏန်း</title>
   <style>
     :root {
-      --bg: #f2f2f7;
-      --card: #ffffff;
-      --text: #000000;
-      --sub: #8e8e93;
-      --red: #d33;
-      --green: #28a745;
-      --border: #e5e5ea;
+      --bg-color: #f2f2f7;
+      --card-bg: #ffffff;
+      --text-main: #000000;
+      --text-sub: #8e8e93;
+      --border-color: #e5e5ea;
+      --red-color: #d33;
+      --green-color: #28a745;
     }
+
     [data-theme="dark"] {
-      --bg: #000000;
-      --card: #1c1c1e;
-      --text: #ffffff;
-      --sub: #8e8e93;
-      --border: #2c2c2e;
+      --bg-color: #000000;
+      --card-bg: #1c1c1e;
+      --text-main: #ffffff;
+      --text-sub: #8e8e93;
+      --border-color: #2c2c2e;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+    body { 
+      background-color: var(--bg-color); 
+      color: var(--text-main); 
+      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    }
     .container { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-    .header { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
-    .back-btn { text-decoration: none; font-size: 22px; color: var(--text); font-weight: bold; }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 4px;
+    }
+    .back-btn {
+      text-decoration: none;
+      font-size: 22px;
+      color: var(--text-main);
+      font-weight: bold;
+    }
     .header-title { font-size: 24px; font-weight: 800; }
-    
-    .card { background: var(--card); border-radius: 20px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-    
-    .num-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center; }
-    .num-box { padding: 12px 0; border-radius: 12px; font-size: 20px; font-weight: 900; border: 1px solid var(--border); }
-    
-    .out { background: rgba(221, 51, 51, 0.08); color: var(--red); border-color: rgba(221, 51, 51, 0.25); }
-    .remain { background: rgba(40, 167, 69, 0.08); color: var(--green); border-color: rgba(40, 167, 69, 0.25); }
-    .loading { text-align: center; padding: 20px; color: var(--sub); }
+
+    /* Card Box */
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .count-badge {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 10px;
+    }
+
+    /* Grid Layout */
+    .num-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      text-align: center;
+    }
+
+    .num-box {
+      padding: 12px 0;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 900;
+      border: 1px solid var(--border-color);
+    }
+
+    .out-box {
+      background: rgba(221, 51, 51, 0.08);
+      color: var(--red-color);
+      border-color: rgba(221, 51, 51, 0.25);
+    }
+
+    .remain-box {
+      background: rgba(40, 167, 69, 0.08);
+      color: var(--green-color);
+      border-color: rgba(40, 167, 69, 0.25);
+    }
+
+    .loading-text {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-sub);
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Header -->
     <div class="header">
       <a href="/index.html" class="back-btn">←</a>
       <div class="header-title">ဒီတစ်ပတ် ဂဏန်းလုံး (0 - 9)</div>
     </div>
 
-    <div id="loading" class="card loading">ဒေတာများ တွက်ချက်နေပါသည်...</div>
+    <!-- Loading State -->
+    <div id="loading" class="card loading-text">ဒေတာများ တွက်ချက်နေပါသည်...</div>
 
+    <!-- Main Content -->
     <div id="content" style="display: none; flex-direction: column; gap: 14px;">
-      <!-- ထွက်ပြီးသား -->
+      <!-- ထွက်ပြီးသား ဂဏန်းများ -->
       <div class="card">
-        <div class="card-title" style="color: var(--red);">
-          <span>ထွက်ပြီးသား ဂဏန်းများ (0-9)</span>
-          <span id="out-count" style="font-size: 14px; background: rgba(221, 51, 51, 0.1); padding: 4px 10px; border-radius: 10px;">0 လုံး</span>
+        <div class="card-title" style="color: var(--red-color);">
+          <span>ထွက်ပြီးသား (0-9)</span>
+          <span id="out-count" class="count-badge" style="background: rgba(221, 51, 51, 0.1);">0 လုံး</span>
         </div>
         <div class="num-grid" id="out-grid"></div>
       </div>
 
-      <!-- ထွက်ရန်ကျန်သည့် -->
+      <!-- ထွက်ရန်ကျန်သည့် ဂဏန်းများ -->
       <div class="card">
-        <div class="card-title" style="color: var(--green);">
-          <span>ထွက်ရန်ကျန်သည့် ဂဏန်းများ (0-9)</span>
-          <span id="remain-count" style="font-size: 14px; background: rgba(40, 167, 69, 0.1); padding: 4px 10px; border-radius: 10px;">0 လုံး</span>
+        <div class="card-title" style="color: var(--green-color);">
+          <span>ထွက်ရန်ကျန်သည့် (0-9)</span>
+          <span id="remain-count" class="count-badge" style="background: rgba(40, 167, 69, 0.1);">0 လုံး</span>
         </div>
         <div class="num-grid" id="remain-grid"></div>
       </div>
@@ -70,44 +139,54 @@
   </div>
 
   <script>
-    async function run(){
+    async function loadRemaining() {
       try {
-        let r = await fetch('https://api.thaistock2d.com/2d_result');
-        let d = await r.json();
-        if(d && d.length){
-          let u = new Set();
-          d.slice(0, 5).forEach(i => {
-            (i.child || []).forEach(c => {
-              let t = String(c.open_time || '');
-              if(t.includes('12:01') || t.includes('12.01') || t.includes('12:00') ||
-                 t.includes('16:30') || t.includes('04:30') || t.includes('16.30') || t.includes('16:25')){
-                if(c.twod && c.twod !== '--'){
-                  let s = c.twod.padStart(2, '0');
-                  u.add(+s[0]);
-                  u.add(+s[1]);
+        const res = await fetch('https://api.thaistock2d.com/2d_result');
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          let usedDigits = new Set();
+
+          // တနင်္လာ မှ သောကြာ (နောက်ဆုံး ၅ ရက်စာ) ရလဒ်များထဲမှ 12:01 PM & 04:30 PM ဂဏန်းလုံးများကို စစ်ထုတ်ခြင်း
+          data.slice(0, 5).forEach(item => {
+            (item.child || []).forEach(c => {
+              const time = String(c.open_time || '');
+              if (time.includes('12:01') || time.includes('12.01') || time.includes('12:00') ||
+                  time.includes('16:30') || time.includes('04:30') || time.includes('16.30') || time.includes('16:25')) {
+                if (c.twod && c.twod !== '--') {
+                  const numStr = c.twod.padStart(2, '0');
+                  usedDigits.add(parseInt(numStr[0]));
+                  usedDigits.add(parseInt(numStr[1]));
                 }
               }
             });
           });
 
-          let a = [0,1,2,3,4,5,6,7,8,9];
-          let o = a.filter(x => u.has(x));
-          let m = a.filter(x => !u.has(x));
+          const allDigits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+          const outList = allDigits.filter(d => usedDigits.has(d));
+          const remainList = allDigits.filter(d => !usedDigits.has(d));
 
           document.getElementById('loading').style.display = 'none';
           document.getElementById('content').style.display = 'flex';
 
-          document.getElementById('out-count').textContent = o.length + ' လုံး';
-          document.getElementById('remain-count').textContent = m.length + ' လုံး';
+          document.getElementById('out-count').textContent = `${outList.length} လုံး`;
+          document.getElementById('remain-count').textContent = `${remainList.length} လုံး`;
 
-          document.getElementById('out-grid').innerHTML = o.length ? o.map(x => `<div class="num-box out">${x}</div>`).join('') : '<div style="grid-column: 1/-1; color: var(--sub);">မရှိသေးပါ</div>';
-          document.getElementById('remain-grid').innerHTML = m.length ? m.map(x => `<div class="num-box remain">${x}</div>`).join('') : '<div style="grid-column: 1/-1; color: var(--sub);">ကုန်ပါပြီ</div>';
+          document.getElementById('out-grid').innerHTML = outList.length > 0 
+            ? outList.map(d => `<div class="num-box out-box">${d}</div>`).join('')
+            : '<div style="grid-column: 1/-1; color: var(--text-sub);">မရှိသေးပါ</div>';
+
+          document.getElementById('remain-grid').innerHTML = remainList.length > 0 
+            ? remainList.map(d => `<div class="num-box remain-box">${d}</div>`).join('')
+            : '<div style="grid-column: 1/-1; color: var(--text-sub);">ကုန်ပါပြီ</div>';
         }
-      } catch(e) {
-        document.getElementById('loading').innerText = 'ဒေတာ ရယူရာတွင် အမှားအယွင်း ရှိနေပါသည်။';
+      } catch (e) {
+        console.error(e);
+        document.getElementById('loading').textContent = 'ဒေတာ ရယူရာတွင် အမှားအယွင်း ရှိနေပါသည်။';
       }
     }
-    run();
+
+    loadRemaining();
   </script>
 </body>
 </html>
