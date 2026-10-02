@@ -178,6 +178,19 @@ let pollTimer=null;
 let clockTimer=null;
 let freeze=null; let recoveryStarted=false;
 
+function startPolling(){
+  if(pollTimer) return;
+  loadLive();
+  pollTimer=setInterval(loadLive,2000);
+}
+
+function stopPolling(){
+  if(pollTimer){
+    clearInterval(pollTimer);
+    pollTimer=null;
+  }
+}
+
 function el(id){return document.getElementById(id);}
 
 function saveFreeze(data){
@@ -550,7 +563,7 @@ function runSchedule(){
     freeze = f;
     showFreeze(f);
   }else{
-    recoverFreeze();
+    loadLive();
   }
 }
 
