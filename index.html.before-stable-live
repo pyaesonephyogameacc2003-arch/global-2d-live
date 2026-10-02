@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<title>2D LIVE</title>
+<style>
+body{margin:0;background:#fff;color:#000;font-family:Arial,"Noto Sans Myanmar",sans-serif}
+.app{max-width:500px;margin:auto;padding:18px 14px}
+.card{border:2px solid #000;border-radius:16px;padding:18px;margin-bottom:18px}
+h1{text-align:center;font-size:24px}
+.hero{text-align:center}
+.twod{font-size:64px;font-weight:900;margin:12px}
+.market{display:flex;justify-content:space-between;margin:10px 0;font-weight:bold}
+.update{border-top:1px solid #000;padding-top:12px;margin-top:15px;display:flex;justify-content:space-between}
+.title{text-align:center;font-size:20px;font-weight:900;margin:20px 0 10px}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result{border:2px solid #000;border-radius:12px;padding:14px;text-align:center}
+.num{font-size:30px;font-weight:900;margin-top:5px}
+.row{display:flex;justify-content:space-between;padding:15px 2px;border-bottom:1px solid #000;font-weight:bold}
+.row:last-child{border-bottom:0}
+.feature{padding:15px 2px;border-bottom:1px solid #000;font-weight:bold}
+.feature:last-child{border-bottom:0}
+</style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#ffffff">
+
+
+
+
+<style>
+:root.dark{
+ --bg:#111 !important;
+ --text:#fff !important;
+ --card:#1d1d1d !important;
+ --border:#fff !important;
+}
+:root.dark body{
+ background:#111 !important;
+ color:#fff !important;
+}
+:root.dark .card,
+:root.dark .table,
+:root.dark .row,
+:root.dark .feature{
+ background:#1d1d1d !important;
+ color:#fff !important;
+ border-color:#fff !important;
+}
+:root.dark a{
+ color:#fff !important;
+}
+</style>
+<style>
+
+/* 2D Live blinking */
+#twod.blink {
+  animation: twodBlink 0.8s steps(1, start) infinite;
+}
+
+@keyframes twodBlink {
+  50% { opacity: 0; }
+}
+
+.bm-time{
+  width:100%;
+  text-align:center;
+  font-weight:700;
+  margin:10px 0 4px;
+}
+
+.bm-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  text-align:center;
+  margin-bottom:8px;
+}
+
+.bm-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.bm-item strong{
+  font-size:1.1em;
+}
+
+.bm-item small{
+  font-size:.75em;
+}
+</style>
+</head>
+<body>
+<script>
+(function(){
+ const dark=localStorage.getItem("darkMode")==="on";
+ if(dark) document.documentElement.classList.add("dark");
+})();
+</script>
+
+<a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
+<a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
+<div class="app">
+
+<h1>TODAY 2D</h1>
+
+<div class="card hero">
+<div class="twod" id="twod">--</div>
+<div class="market"><span>SET</span><span id="set">--</span></div>
+<div class="market"><span>VALUE</span><span id="value">--</span></div>
+<div class="update"><span>Updated</span><span id="time">--</span></div>
+</div>
+
+<div class="title">ယနေ့ ရလဒ်</div>
+
+<div class="results">
+<div class="result"><b>12:01</b><div class="num" id="r1201">--</div></div>
+<div class="result"><b>16:30</b><div class="num" id="r1630">--</div></div>
+</div>
+
+<div class="card" style="margin-top:18px">
+
+<div class="bm-time">9:30</div>
+<div class="bm-grid">
+  <div class="bm-item"><span>Modern</span><strong id="modern0930">--</strong><small id="date0930"></small></div>
+  <div class="bm-item"><span>Internet</span><strong id="internet0930">--</strong><small id="date0930i"></small></div>
+</div>
+
+<div class="bm-time">02:00</div>
+<div class="bm-grid">
+  <div class="bm-item"><span>Modern</span><strong id="modern1400">--</strong><small id="date1400"></small></div>
+  <div class="bm-item"><span>Internet</span><strong id="internet1400">--</strong><small id="date1400i"></small></div>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="row"><span>11:00 ထွက်ဂဏန်း</span><span id="r1100">--</span></div>
+<div class="row"><span>03:00 ထွက်ဂဏန်း</span><span id="r1500">--</span></div>
+
+</div>
+
+<div class="card">
+
+<a class="feature-card" href="/history.html"><span>📅</span><b>2D History</b><i>›</i></a>
+<div class="feature">2D Formula　›</div>
+<a class="feature-card" href="/remaining.html"><span>🔢</span><b>ကျန်ဂဏန်း</b><i>›</i></a>
+
+</div>
+
+</div>
+
+<script>
+let pollTimer=null; let clockTimer=null; let freeze=null; let freezeRequested=false; async function loadLive(){
+try{
+let response=await fetch("/api/live?t="+Date.now(),{cache:"no-store"});
+console.log("STATUS",response.status);
+let d=await response.json();
+let l=d.live||{},r=d.result||[],b=d.bm2d||[];
+
+
+document.getElementById("set").textContent=l.set||"--";
+document.getElementById("value").textContent=l.value||"--";
+document.getElementById("time").textContent=l.time||"--";
+let updateTime=document.getElementById("updateTime");
+let updateCheck=document.getElementById("updateCheck");
+
+function bm(t,k){let x=b.find(a=>a.time===t);return x?x[k]||"--":"--";} document.getElementById("modern0930").textContent=bm("09:30 AM","modern"); document.getElementById("internet0930").textContent=bm("09:30 AM","internet"); document.getElementById("modern1400").textContent=bm("02:00 PM","modern"); document.getElementById("internet1400").textContent=bm("02:00 PM","internet"); let x0930=b.find(a=>a.time==="09:30 AM"),x1400=b.find(a=>a.time==="02:00 PM"); document.getElementById("date0930").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date0930i").textContent=x0930?" ("+x0930.date+")":""; document.getElementById("date1400").textContent=x1400?" ("+x1400.date+")":""; document.getElementById("date1400i").textContent=x1400?" ("+x1400.date+")":""; let now=new Date();
+let today=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+let confirmed=null;
+
+for(let a of r){
+ let ot=(a.open_time||"").slice(0,5);
+ let dt=a.stock_datetime||"";
+
+ if(!["12:01","16:30"].includes(ot)) continue;
+ if(!a.twod || a.twod==="--" || !dt) continue;
+ if(dt.slice(0,10)!==today) continue;
+
+ let stamp=new Date(dt.replace(" ","T"));
+ let age=(now-stamp)/60000;
+
+ if((ot==="12:01" && age>=0 && age<15) ||
+    (ot==="16:30" && age>=0 && age<15)){
+   if(!confirmed || stamp>new Date((confirmed.stock_datetime||"").replace(" ","T"))){
+     confirmed=a;
+   }
+ }
+}
+
+let twodEl=document.getElementById("twod");
+let twodValue=confirmed ? confirmed.twod : (l.twod||"--");
+
+twodEl.textContent=twodValue;
+
+/* Blink LIVE only, stop when confirmed result is shown */
+if(!confirmed && twodValue && twodValue!=="--"){
+ twodEl.classList.add("blink");
+}else{
+ twodEl.classList.remove("blink");
+}
+
+document.getElementById("time").textContent =
+ confirmed ? confirmed.stock_datetime+" ✓✓" : (l.time||"--");
+
+function get(t){
+let x=r.find(a=>{let o=(a.open_time||"").slice(0,5);return o===t.slice(0,5);});
+return x?x.twod:"--";
+}
+
+document.getElementById("r1100").textContent=get("11:00:00");
+document.getElementById("r1201").textContent=get("12:01:00");
+document.getElementById("r1500").textContent=get("15:00:00");
+document.getElementById("r1630").textContent=get("16:30:00");
+
+}catch(e){
+console.log("LIVE ERROR",e);document.getElementById("time").textContent="JS ERROR: "+(e.message||e);
+}
+}
+
+function runSchedule(){
+let n=new Date();
+let m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
+let freezeData=localStorage.getItem("twodFreeze");
+
+try{
+ if(freezeData){
+  let z=JSON.parse(freezeData);
+  if(!z||!z.twod||!z.time){
+   localStorage.removeItem("twodFreeze");
+   freezeData=null;
+  }
+ }
+}catch(e){
+ localStorage.removeItem("twodFreeze");
+ freezeData=null;
+}
+
+if(m>=540 && m<990){
+ if(pollTimer) return;
+ localStorage.removeItem("twodFreeze");
+ freeze=null;
+ loadLive();
+ pollTimer=setInterval(loadLive,2000);
+ return;
+}
+
+if(m>=990){
+ if(!pollTimer){
+  loadLive();
+  pollTimer=setInterval(()=>{
+   if(localStorage.getItem("twodFreeze")){
+    clearInterval(pollTimer);
+    pollTimer=null;
+   }else{
+    loadLive();
+   }
+  },2000);
+ }
+ return;
+}
+
+if(pollTimer){
+ clearInterval(pollTimer);
+ pollTimer=null;
+}
+
+let f=localStorage.getItem("twodFreeze");
+if(f){
+ try{
+  freeze=JSON.parse(f);
+  if(freeze&&freeze.twod&&freeze.time){
+   document.getElementById("twod").textContent=freeze.twod;
+   document.getElementById("time").textContent=freeze.time+" ✓✓";
+   document.getElementById("twod").classList.remove("blink");
+  }
+ }catch(e){
+  localStorage.removeItem("twodFreeze");
+  freeze=null;
+ }
+}else{
+ loadLive();
+}
+}
+runSchedule();
+clockTimer=setInterval(runSchedule,1000);
+
+document.addEventListener("visibilitychange",()=>{
+ if(document.visibilityState==="visible")runSchedule();
+});
+
+window.addEventListener("focus",runSchedule);
+window.addEventListener("pageshow",runSchedule);
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js")}</script></body>
+</html>
