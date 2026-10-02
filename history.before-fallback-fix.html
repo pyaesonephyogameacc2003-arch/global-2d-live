@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2D History</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#fff;
+ color:#000;
+ padding:16px;
+}
+h1{
+ text-align:center;
+ font-size:25px;
+ margin:8px 0 18px;
+}
+select{
+ display:block;
+ width:100%;
+ max-width:300px;
+ margin:0 auto 18px;
+ padding:12px;
+ font-size:16px;
+ border:2px solid #000;
+ border-radius:8px;
+ background:#fff;
+ color:#000;
+}
+.table{
+ width:100%;
+ max-width:600px;
+ margin:auto;
+ border:2px solid #000;
+}
+.row{
+ display:grid;
+ grid-template-columns:1.25fr repeat(4,1fr);
+ border-bottom:1px solid #000;
+}
+.row:last-child{border-bottom:0}
+.cell{
+ padding:11px 4px;
+ text-align:center;
+ border-right:1px solid #000;
+ font-size:14px;
+}
+.cell:last-child{border-right:0}
+.head{
+ font-weight:bold;
+ background:#000;
+ color:#fff;
+}
+.twod{
+ font-weight:bold;
+ font-size:16px;
+}
+.loading{
+ text-align:center;
+ padding:20px;
+}
+.error{
+ color:#b00000;
+ text-align:center;
+ padding:20px;
+}
+</style>
+
+
+
+
+
+<style>
+:root.dark{
+ --bg:#111 !important;
+ --text:#fff !important;
+ --card:#1d1d1d !important;
+ --border:#fff !important;
+}
+:root.dark body{
+ background:#111 !important;
+ color:#fff !important;
+}
+:root.dark .card,
+:root.dark .table,
+:root.dark .row,
+:root.dark .feature{
+ background:#1d1d1d !important;
+ color:#fff !important;
+ border-color:#fff !important;
+}
+:root.dark a{
+ color:#fff !important;
+}
+</style>
+</head>
+
+<body>
+<script>
+(function(){
+ const dark=localStorage.getItem("darkMode")==="on";
+ if(dark) document.documentElement.classList.add("dark");
+})();
+</script>
+
+<a href="/settings.html" style="position:absolute;top:12px;right:16px;font-size:24px;text-decoration:none;color:inherit">⚙️</a>
+
+<h1>2D History</h1>
+
+<select id="month">
+<option value="2026-09">September 2026</option>
+</select>
+
+<div class="table">
+<div class="row head">
+<div class="cell">Date</div>
+<div class="cell">11:00</div>
+<div class="cell">12:01</div>
+<div class="cell">15:00</div>
+<div class="cell">16:30</div>
+</div>
+
+<div id="history">
+<div class="loading">Loading...</div>
+</div>
+</div>
+
+<script>
+const month=document.getElementById("month");
+const history=document.getElementById("history");
+
+function getDays(year,monthIndex){
+ let days=[];
+ let total=new Date(year,monthIndex+1,0).getDate();
+
+ for(let d=1;d<=total;d++){
+  let date=new Date(year,monthIndex,d);
+  let wd=date.getDay();
+  if(wd!==0 && wd!==6) days.push(d);
+ }
+
+ return days;
+}
+
+async function fetchDay(date){
+
+ let values={
+  "11:00:00":"--",
+  "12:01:00":"--",
+  "15:00:00":"--",
+  "16:30:00":"--"
+ };
+
+ try{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),8000);
+
+  const response=await fetch(
+   "/api/history?date="+date,
+   {
+    cache:"no-store",
+    signal:controller.signal
+   }
+  );
+
+  clearTimeout(timer);
+
+  if(!response.ok) throw Error("HTTP "+response.status);
+
+  const data=await response.json();
+
+  if(Array.isArray(data) && data[0] && Array.isArray(data[0].child)){
+   data[0].child.forEach(item=>{
+    if(Object.prototype.hasOwnProperty.call(values,item.time)){
+     values[item.time]=item.twod || "--";
+    }
+   });
+  }
+
+ }catch(e){
+  console.log(date,e);
+ }
+
+ const fallback1630={
+  "2026-09-03":"23",
+  "2026-09-09":"90",
+  "2026-09-14":"79",
+  "2026-09-21":"34",
+  "2026-09-24":"87"
+ };
+
+ if(values["16:30:00"]==="--" && fallback1630[date]){
+  values["16:30:00"]=fallback1630[date];
+ }
+
+ return values;
+}
+
+async function loadHistory(){
+
+ history.innerHTML='<div class="loading">Loading...</div>';
+
+ const [year,monthNum]=month.value.split("-").map(Number);
+ const monthIndex=monthNum-1;
+ const days=getDays(year,monthIndex);
+
+ const requests=days.map(day=>{
+
+  const date=
+   year+"-"+
+   String(monthNum).padStart(2,"0")+"-"+
+   String(day).padStart(2,"0");
+
+  return fetchDay(date).then(values=>({
+   day,
+   values
+  }));
+
+ });
+
+ const rows=await Promise.all(requests);
+
+ history.innerHTML="";
+
+ rows.forEach(item=>{
+
+  const row=document.createElement("div");
+  row.className="row";
+
+  const dateLabel=
+   item.day+" "+
+   new Date(year,monthIndex,item.day)
+    .toLocaleString("en-US",{month:"short"});
+
+  row.innerHTML=
+   '<div class="cell date">'+dateLabel+'</div>'+
+   '<div class="cell twod">'+item.values["11:00:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["12:01:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["15:00:00"]+'</div>'+
+   '<div class="cell twod">'+item.values["16:30:00"]+'</div>';
+
+  history.appendChild(row);
+ });
+}
+
+month.addEventListener("change",loadHistory);
+loadHistory();
+</script>
+
+</body>
+</html>
