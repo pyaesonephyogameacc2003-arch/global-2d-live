@@ -37,6 +37,26 @@ def normalize(payload, now):
     if source_date != day:
         out["status"] = "date_mismatch"
         return out
+    number = digit(data.get("live"))
+    set_value = str(data.get("live_set") or "").strip()
+    trade_value = str(data.get("live_val") or "").strip()
+    numeric = r"(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)(?:\.[0-9]+)?"
+    if number is not None and re.fullmatch(numeric, set_value) and re.fullmatch(numeric, trade_value):
+        closed = (now.hour, now.minute) >= (16, 30)
+        final = digit(data.get("result_430"))
+        final_stamp = re.fullmatch(r"(\d{4}-\d{2}-\d{2})[/ T](?:16|4):30(?::00)?", str(data.get("time_430") or ""))
+        final_ok = bool(closed and number == final and final_stamp and final_stamp.group(1) == day)
+        current_time = str(data.get("current_time") or "")
+        try:
+            observed = datetime.strptime(day + " " + current_time, "%Y-%m-%d %H:%M:%S").replace(tzinfo=MYANMAR)
+            observed_ok = -5 <= (now - observed).total_seconds() <= 90
+        except ValueError:
+            observed_ok = False
+        if final_ok or observed_ok:
+            out["live"] = {"twod": number, "set": set_value, "value": trade_value,
+                           "date": day, "time": day + " 16:30:00" if final_ok else day + " " + current_time,
+                           "time_kind": "final_result" if final_ok else "source_clock",
+                           "observed_at": now.isoformat(), "final": final_ok}
     for slot, suffix, time in (("morning", "930", (9, 30)),
                                ("afternoon", "200", (14, 0))):
         if (now.hour, now.minute) >= time:
@@ -56,7 +76,7 @@ class handler(BaseHTTPRequestHandler):
             return self.reply(503, {"error": "HTAY_API_KEY not configured"}, 0)
         if demo:
             key = "demoapi"
-        ttl = min(3600 if demo else 300, max(0, 86400 - now.hour*3600 - now.minute*60 - now.second))
+        ttl = min(3600 if demo else 60, max(0, 86400 - now.hour*3600 - now.minute*60 - now.second))
         try:
             req = urllib.request.Request(
                 ENDPOINT, headers={"X-HtayApi-Key": key, "Accept": "application/json",
