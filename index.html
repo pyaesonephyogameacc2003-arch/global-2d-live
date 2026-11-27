@@ -270,7 +270,7 @@ async function loadLive(){
 
     let l = d.live || {};
     let r = d.result || [];
-    let b = d.bm2d || [];
+
 
     let {day:today,minutes}=mmNow();syncConfirmed(today);
 
@@ -280,38 +280,6 @@ async function loadLive(){
      */
     if(el('set')) el('set').textContent = l.set || '--';
     if(el('value')) el('value').textContent = l.value || '--';
-
-    function bm(t,k){
-      let x = b.find(a => a.time === t);
-      return x ? (x[k] || '--') : '--';
-    }
-
-    if(el('modern0930'))
-      el('modern0930').textContent = bm('09:30 AM','modern');
-
-    if(el('internet0930'))
-      el('internet0930').textContent = bm('09:30 AM','internet');
-
-    if(el('modern1400'))
-      el('modern1400').textContent = bm('02:00 PM','modern');
-
-    if(el('internet1400'))
-      el('internet1400').textContent = bm('02:00 PM','internet');
-
-    let x0930 = b.find(a => a.time === '09:30 AM');
-    let x1400 = b.find(a => a.time === '02:00 PM');
-
-    if(el('date0930'))
-      el('date0930').textContent = x0930 ? ' ('+x0930.date+')' : '';
-
-    if(el('date0930i'))
-      el('date0930i').textContent = x0930 ? ' ('+x0930.date+')' : '';
-
-    if(el('date1400'))
-      el('date1400').textContent = x1400 ? ' ('+x1400.date+')' : '';
-
-    if(el('date1400i'))
-      el('date1400i').textContent = x1400 ? ' ('+x1400.date+')' : '';
 
     /*
      * Today's results only.
@@ -522,6 +490,36 @@ function runSchedule(){
   }
 }
 
+let modernBusy=false, modernLast=0;
+async function loadModern(){
+ if(modernBusy||document.hidden||Date.now()-modernLast<300000)return;
+ modernBusy=true;modernLast=Date.now();
+ try{
+  const res=await fetch('/api/modern',{cache:'default'});
+  if(!res.ok)throw new Error('Modern API '+res.status);
+  const data=await res.json();
+  if(data.date!==mmNow().day)return;
+  for(const [suffix,slot] of [['0930','morning'],['1400','afternoon']]){
+   for(const kind of ['modern','internet']){
+    const value=data[slot]?.[kind];
+    if(typeof value==='string'&&/^\d{2}$/.test(value)){
+     el(kind+suffix).textContent=value;
+     el('date'+suffix+(kind==='internet'?'i':'')).textContent=' ('+data.date+')';
+    }
+   }
+  }
+ }catch(e){console.log('Modern/Internet unavailable',e);}
+ finally{modernBusy=false;}
+}
+let modernDay=mmNow().day;
+function modernSchedule(){
+ const today=mmNow().day;
+ if(today!==modernDay){modernDay=today;modernLast=0;for(const suffix of ['0930','1400']){for(const kind of ['modern','internet']){el(kind+suffix).textContent='--';el('date'+suffix+(kind==='internet'?'i':'')).textContent='';}}}
+ loadModern();
+}
+modernSchedule();
+setInterval(modernSchedule,30000);
+document.addEventListener('visibilitychange',modernSchedule);
 runSchedule();
 
 clockTimer=setInterval(runSchedule,1000);
