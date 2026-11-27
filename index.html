@@ -177,6 +177,12 @@ h1{text-align:center;font-size:24px}
 let pollTimer=null;
 let clockTimer=null;
 let freeze=null; let recoveryStarted=false;
+let liveBusy=false;
+let sessionDay=''; const confirmedCache=new Map();
+function mmNow(){const d=new Date(Date.now()+390*60000);return {day:d.toISOString().slice(0,10),minutes:d.getUTCHours()*60+d.getUTCMinutes()+d.getUTCSeconds()/60};}
+function syncConfirmed(day){if(sessionDay===day)return;sessionDay=day;confirmedCache.clear();try{const x=JSON.parse(localStorage.getItem('confirmed2d-v2')||'null');if(x?.day===day)for(const [k,v] of x.results)confirmedCache.set(k,v);}catch(e){}}
+function activeConfirmed(){const {day,minutes}=mmNow();syncConfirmed(day);const slot=minutes>=721&&minutes<736?'12:01':minutes>=990&&minutes<1005?'16:30':null;return slot&&confirmedCache.get(slot)?{...confirmedCache.get(slot),displayTime:day+' '+slot+':00 ✅✅'}:null;}
+function paintConfirmed(){const c=activeConfirmed();if(!c)return false;el('twod').textContent=c.twod;el('time').textContent=c.displayTime;el('twod').classList.remove('blink');return true;}
 
 function startPolling(){
   if(pollTimer) return;
@@ -249,14 +255,10 @@ function showFreeze(x){
   return true;
 }
 
-function todayString(){
-  let n = new Date();
-  return n.getFullYear() + '-' +
-    String(n.getMonth()+1).padStart(2,'0') + '-' +
-    String(n.getDate()).padStart(2,'0');
-}
+function todayString(){return mmNow().day;}
 
 async function loadLive(){
+  if(liveBusy)return;liveBusy=true;
   try{
     let response = await fetch('/api/live?t='+Date.now(), {
       cache:'no-store'
@@ -270,12 +272,7 @@ async function loadLive(){
     let r = d.result || [];
     let b = d.bm2d || [];
 
-    let now = new Date();
-    let today = todayString();
-    let minutes =
-      now.getHours()*60 +
-      now.getMinutes() +
-      now.getSeconds()/60;
+    let {day:today,minutes}=mmNow();syncConfirmed(today);
 
     /*
      * SET / VALUE
@@ -340,6 +337,9 @@ async function loadLive(){
       if(ot === '15:00') result1500 = a;
       if(ot === '16:30') result1630 = a;
     }
+    for(const [slot,result] of [['12:01',result12],['16:30',result1630]]){if(result&&/^\d{2}$/.test(String(result.twod))&&minutes>=(slot==='12:01'?721:990))confirmedCache.set(slot,result);}
+    try{localStorage.setItem('confirmed2d-v2',JSON.stringify({day:today,results:[...confirmedCache]}));}catch(e){}
+    result12=result12||confirmedCache.get('12:01');result1630=result1630||confirmedCache.get('16:30');
 
     /*
      * 16:30 reached:
@@ -387,7 +387,7 @@ async function loadLive(){
      * 09:00 - 16:29:
      * normal live display.
      */
-    if(minutes >= 540 && minutes < 990){
+    if(minutes >= 540){
 
       if(el('set')) el('set').textContent = l.set || '--';
       if(el('value')) el('value').textContent = l.value || '--';
@@ -408,20 +408,7 @@ async function loadLive(){
     /*
      * Main 2D display.
      */
-    let confirmed = null;
-
-    if(result1630 && minutes >= 990){
-      confirmed = result1630;
-    }else if(result12){
-      let stamp = new Date(
-        result12.stock_datetime.replace(' ','T')
-      );
-
-      let age = (now - stamp) / 60000;
-
-      if(age >= 0 && age < 15)
-        confirmed = result12;
-    }
+    let confirmed = activeConfirmed();
 
     let twodValue =
       confirmed ? confirmed.twod : (l.twod || '--');
@@ -433,7 +420,7 @@ async function loadLive(){
 
       if(el('time'))
         el('time').textContent =
-          confirmed.stock_datetime + ' ✓✓';
+          confirmed.displayTime;
 
       if(el('twod'))
         el('twod').classList.remove('blink');
@@ -443,23 +430,14 @@ async function loadLive(){
       if(el('time'))
         el('time').textContent = l.time || '--';
 
-      if(l.twod && l.twod !== '--' && el('twod'))
-        el('twod').classList.add('blink');
+      if(el('twod')) el('twod').classList.toggle('blink',Boolean(l.twod && l.twod !== '--') && minutes>=540 && minutes<990);
     }
 
     /*
      * 16:30 snapshot must remain visible even if API
      * subsequently returns incomplete data.
      */
-    if(minutes >= 990){
-
-      let f = readFreeze();
-
-      if(f){
-        freeze = f;
-        showFreeze(f);
-      }
-    }
+    if(minutes >= 1005 && (!l.twod || l.twod==='--')){let f=readFreeze();if(f&&f.date===today){showFreeze(f);}}
 
   }catch(e){
 
@@ -470,13 +448,8 @@ async function loadLive(){
      * use today's frozen snapshot instead of replacing
      * everything with '--'.
      */
-    let f = readFreeze();
-
-    if(f){
-      freeze = f;
-      showFreeze(f);
-    }
-  }
+    if(!paintConfirmed()){let f=readFreeze();if(f&&f.date===todayString())showFreeze(f);else el('twod')?.classList.remove('blink');}
+  }finally{liveBusy=false;}
 }
 
 async function recoverFreeze(){
@@ -509,18 +482,14 @@ async function recoverFreeze(){
 
 function runSchedule(){
 
-  let n = new Date();
-
-  let m =
-    n.getHours()*60 +
-    n.getMinutes() +
-    n.getSeconds()/60;
+  let {minutes:m}=mmNow();
 
   /*
    * 09:00 - 16:29
    * Live API polling.
    */
   if(m >= 540 && m < 990){
+    paintConfirmed();
 
     localStorage.removeItem('twodFreeze');
     freeze = null;
@@ -534,21 +503,7 @@ function runSchedule(){
    * Fetch once to capture the final 16:30 result,
    * then STOP polling.
    */
-  if(m >= 990){
-
-    stopPolling();
-
-    let f = readFreeze();
-
-    if(!f){
-      loadLive();
-    }else{
-      freeze = f;
-      showFreeze(f);
-    }
-
-    return;
-  }
+  if(m >= 990){startPolling();paintConfirmed();return;}
 
   /*
    * 00:00 - 08:59
