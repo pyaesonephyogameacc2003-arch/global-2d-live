@@ -82,6 +82,10 @@ h1{text-align:center;font-size:24px}
   50% { opacity: 0; }
 }
 
+#connectionStatus{font-size:13px;font-weight:700;padding:9px 10px;border-radius:8px;margin-bottom:8px;background:#fff0ce;color:#754900;line-height:1.5}
+#connectionStatus[data-state="offline"]{background:#fce3e3;color:#942727}
+:root.dark #connectionStatus{background:#3a2c13;color:#ffd78a}
+:root.dark #connectionStatus[data-state="offline"]{background:#3b2020;color:#ffb2b2}
 .bm-time{
   width:100%;
   text-align:center;
@@ -127,6 +131,7 @@ h1{text-align:center;font-size:24px}
 <h1>TODAY 2D</h1>
 
 <div class="card hero">
+<div id="connectionStatus" role="status" aria-live="polite" hidden></div>
 <div class="twod" id="twod">--</div>
 <div class="market"><span>SET</span><span id="set">--</span></div>
 <div class="market"><span>VALUE</span><span id="value">--</span></div>
@@ -178,6 +183,13 @@ let pollTimer=null;
 let clockTimer=null;
 let freeze=null; let recoveryStarted=false;
 let liveBusy=false;
+let liveAbort=null, liveNext=0, liveFailures=0, connectionState='connecting', lastSuccess=0;
+let latestLiveView=null;
+function connection(state){connectionState=state;const box=el('connectionStatus');box.hidden=state==='online';box.dataset.state=state;box.textContent=state==='offline'?'Offline · နောက်ဆုံးရရှိထားသော ဒေတာ':state==='error'?'API unavailable · ပြန်လည်ချိတ်ဆက်နေပါသည်':'Reconnecting… · ဒေတာရယူနေပါသည်';if(state!=='online')el('twod')?.classList.remove('blink');}
+function rememberLive(l){if(!/^\d{2}$/.test(String(l.twod??''))||!l.time)return;latestLiveView={day:todayString(),twod:String(l.twod),time:String(l.time),set:l.set||'--',value:l.value||'--',results:{}};for(const id of ['r1100','r1201','r1500','r1630'])latestLiveView.results[id]=el(id).textContent;try{localStorage.setItem('lastLiveView-v1',JSON.stringify(latestLiveView));}catch(e){}}
+function restoreLive(){if(!latestLiveView){try{latestLiveView=JSON.parse(localStorage.getItem('lastLiveView-v1')||'null');}catch(e){}}const v=latestLiveView;if(!v||!/^\d{2}$/.test(String(v.twod))||!v.time)return;for(const id of ['twod','time','set','value'])el(id).textContent=v[id]||'--';for(const id of ['r1100','r1201','r1500','r1630'])el(id).textContent=v.day===todayString()?(v.results?.[id]||'--'):'--';}
+function offlineView(){restoreLive();if(!paintConfirmed()){const t=el('time');t.textContent=t.textContent.replace(/\s*✅✅$/,'');}el('twod').classList.remove('blink');}
+async function timedFetch(url,options={},ms=12000,controller=new AbortController()){const timer=setTimeout(()=>controller.abort(),ms);try{const res=await fetch(url,{...options,signal:controller.signal});if(!res.ok)throw Error('HTTP '+res.status);return await res.json();}finally{clearTimeout(timer);}}
 let sessionDay=''; const confirmedCache=new Map();
 function mmNow(){const d=new Date(Date.now()+390*60000);return {day:d.toISOString().slice(0,10),minutes:d.getUTCHours()*60+d.getUTCMinutes()+d.getUTCSeconds()/60};}
 function syncConfirmed(day){if(sessionDay===day)return;sessionDay=day;confirmedCache.clear();try{const x=JSON.parse(localStorage.getItem('confirmed2d-v2')||'null');if(x?.day===day)for(const [k,v] of x.results)confirmedCache.set(k,v);}catch(e){}}
@@ -258,15 +270,12 @@ function showFreeze(x){
 function todayString(){return mmNow().day;}
 
 async function loadLive(){
-  if(liveBusy)return;liveBusy=true;
+  if(liveBusy||!navigator.onLine||Date.now()<liveNext)return;liveBusy=true;liveAbort=new AbortController();
   try{
-    let response = await fetch('/api/live?t='+Date.now(), {
-      cache:'no-store'
-    });
-
-    if(!response.ok) throw new Error('API '+response.status);
-
-    let d = await response.json();
+    let d=await timedFetch('/api/live?t='+Date.now(),{cache:'no-store'},12000,liveAbort);
+    if(!navigator.onLine)throw Error('Offline');
+    if(!d.live||typeof d.live!=='object'||!Array.isArray(d.result))throw Error('Invalid live response');
+    liveFailures=0;liveNext=0;lastSuccess=Date.now();connection('online');
 
     let l = d.live || {};
     let r = d.result || [];
@@ -406,6 +415,7 @@ async function loadLive(){
      * subsequently returns incomplete data.
      */
     if(minutes >= 1005 && (!l.twod || l.twod==='--')){let f=readFreeze();if(f&&f.date===today){showFreeze(f);}}
+    rememberLive(l);
 
   }catch(e){
 
@@ -416,8 +426,8 @@ async function loadLive(){
      * use today's frozen snapshot instead of replacing
      * everything with '--'.
      */
-    if(!paintConfirmed()){let f=readFreeze();if(f&&f.date===todayString())showFreeze(f);else el('twod')?.classList.remove('blink');}
-  }finally{liveBusy=false;}
+    liveFailures++;liveNext=Date.now()+Math.min(60000,2000*2**Math.min(liveFailures,5));connection(navigator.onLine?'error':'offline');offlineView();
+  }finally{liveBusy=false;liveAbort=null;}
 }
 
 async function recoverFreeze(){
@@ -451,6 +461,8 @@ async function recoverFreeze(){
 function runSchedule(){
 
   let {minutes:m}=mmNow();
+  if(!navigator.onLine){stopPolling();connection('offline');offlineView();return;}
+  if(connectionState!=='online'){offlineView();startPolling();return;}
 
   /*
    * 09:00 - 16:29
@@ -492,12 +504,10 @@ function runSchedule(){
 
 let modernBusy=false, modernLast=0;
 async function loadModern(){
- if(modernBusy||document.hidden||Date.now()-modernLast<300000)return;
+ if(modernBusy||!navigator.onLine||document.hidden||Date.now()-modernLast<300000)return;
  modernBusy=true;modernLast=Date.now();
  try{
-  const res=await fetch('/api/modern',{cache:'default'});
-  if(!res.ok)throw new Error('Modern API '+res.status);
-  const data=await res.json();
+  const data=await timedFetch('/api/modern',{cache:'default'},12000);
   if(data.date!==mmNow().day)return;
   for(const [suffix,slot] of [['0930','morning'],['1400','afternoon']]){
    for(const kind of ['modern','internet']){
@@ -517,6 +527,9 @@ function modernSchedule(){
  if(today!==modernDay){modernDay=today;modernLast=0;for(const suffix of ['0930','1400']){for(const kind of ['modern','internet']){el(kind+suffix).textContent='--';el('date'+suffix+(kind==='internet'?'i':'')).textContent='';}}}
  loadModern();
 }
+restoreLive();connection(navigator.onLine?'connecting':'offline');
+window.addEventListener('offline',()=>{liveAbort?.abort();stopPolling();connection('offline');offlineView();});
+window.addEventListener('online',()=>{connection('connecting');liveNext=0;modernLast=0;runSchedule();loadLive();modernSchedule();});
 modernSchedule();
 setInterval(modernSchedule,30000);
 document.addEventListener('visibilitychange',modernSchedule);
